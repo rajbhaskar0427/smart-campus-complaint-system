@@ -35,6 +35,12 @@ def allowed_file(filename):
 if not os.path.exists(DB_PATH):
     init_db()
     seed_db()
+else:
+    try:
+        init_db()
+        seed_db()
+    except Exception:
+        pass
 
 @app.before_request
 def load_logged_in_user():

@@ -7,11 +7,12 @@ import hashlib
 if os.environ.get('VERCEL') == '1':
     DB_PATH = '/tmp/campus_complaints.db'
     source_db = os.path.join(os.path.dirname(__file__), 'campus_complaints.db')
-    if not os.path.exists(DB_PATH) and os.path.exists(source_db):
-        try:
-            shutil.copy2(source_db, DB_PATH)
-        except Exception:
-            pass
+    if not os.path.exists(DB_PATH):
+        if os.path.exists(source_db):
+            try:
+                shutil.copy2(source_db, DB_PATH)
+            except Exception:
+                pass
 else:
     DB_PATH = os.path.join(os.path.dirname(__file__), 'campus_complaints.db')
 

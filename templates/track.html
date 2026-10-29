@@ -184,8 +184,8 @@
               {% if ticket.feedback_rating %}
                 <div style="display: flex; align-items: center; gap: 14px;">
                   <div style="font-size: 1.8rem; color: #f59e0b;">
-                    {% for i in range(ticket.feedback_rating) %}★{% endfor %}
-                    {% for i in range(5 - ticket.feedback_rating) %}☆{% endfor %}
+                    {% for i in range(ticket.feedback_rating|int) %}★{% endfor %}
+                    {% for i in range(5 - (ticket.feedback_rating|int)) %}☆{% endfor %}
                   </div>
                   <div>
                     <b style="color: var(--secondary);">Rating: {{ ticket.feedback_rating }} / 5 Stars</b>
