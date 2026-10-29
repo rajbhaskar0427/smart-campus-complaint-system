@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, send_file, g
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, send_file, send_from_directory, g
 import os
 import sqlite3
 import random
@@ -8,8 +8,14 @@ import csv
 from werkzeug.utils import secure_filename
 from database import get_db, init_db, seed_db, hash_password, DB_PATH
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static', static_url_path='/static')
 app.secret_key = 'smart-campus-complaint-secret-key-2026'
+
+# Fallback explicit static handler for Vercel
+@app.route('/static/<path:filename>')
+def serve_static_asset(filename):
+    static_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static')
+    return send_from_directory(static_folder, filename)
 
 # Configure upload folder
 if os.environ.get('VERCEL') == '1':
