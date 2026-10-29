@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block title %}Field Maintenance & Technician Portal - Lloyd Smart Campus{% endblock %}
+
+{% block content %}
+<div>
+
+  <!-- Staff Banner -->
+  <div style="background: white; border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 24px 28px; margin-bottom: 28px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 20px; box-shadow: var(--shadow-sm);">
+    <div style="display: flex; align-items: center; gap: 16px;">
+      <div style="width: 58px; height: 58px; border-radius: var(--radius-md); background: linear-gradient(135deg, #059669, #10b981); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; font-weight: 800;">
+        🛠️
+      </div>
+      <div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <h2 style="font-size: 1.45rem; font-weight: 800; color: var(--secondary);">Maintenance Field Console</h2>
+          <span class="badge" style="background: #dcfce7; color: #15803d;">Active Dispatch</span>
+        </div>
+        <div style="color: var(--text-muted); font-size: 0.88rem; margin-top: 2px;">
+          Technician: <b>{{ staff_name or 'Department Maintenance Queue' }}</b>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Switcher for different staff roles -->
+    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+      <a href="{{ url_for('login', demo='staff_elec') }}" class="chip-btn" style="background: white; color: #047857; border: 1px solid #a7f3d0;">
+        ⚡ Electrician Ramesh
+      </a>
+      <a href="{{ url_for('login', demo='staff_it') }}" class="chip-btn" style="background: white; color: #1e40af; border: 1px solid #bfdbfe;">
+        💻 Network Admin Rajesh
+      </a>
+    </div>
+  </div>
+
+  <!-- Assigned Work Orders Card -->
+  <div class="card">
+    <div class="card-header">
+      <h3>🔧 Assigned Campus Work Orders</h3>
+      <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">{{ tasks|length }} Pending/Active Work Orders</span>
+    </div>
+    <div class="card-body" style="padding: 0;">
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Ticket ID</th>
+              <th>Category & Description</th>
+              <th>Exact Location</th>
+              <th>Priority</th>
+              <th>Status</th>
+              <th>SLA Target</th>
+              <th>Update Progress</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for t in tasks %}
+              <tr>
+                <td>
+                  <a href="{{ url_for('track_complaint', ticket_id=t.ticket_id) }}" class="ticket-code">
+                    #{{ t.ticket_id }}
+                  </a>
+                </td>
+                <td>
+                  <div style="font-weight: 700; color: var(--secondary);">{{ t.title }}</div>
+                  <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">{{ t.description }}</div>
+                  <div style="font-size: 0.78rem; color: var(--primary); margin-top: 4px;">👤 Complainant: {{ t.user_name }} ({{ t.user_roll or 'Student' }})</div>
+                </td>
+                <td>
+                  <div style="font-weight: 600;">📍 {{ t.building_block }}</div>
+                  <div style="font-size: 0.78rem; color: var(--text-subtle);">{{ t.room_location }}</div>
+                </td>
+                <td>
+                  {% if t.priority == 'Critical' %}
+                    <span class="prio-pill prio-critical">Critical</span>
+                  {% elif t.priority == 'High' %}
+                    <span class="prio-pill prio-high">High</span>
+                  {% elif t.priority == 'Medium' %}
+                    <span class="prio-pill prio-medium">Medium</span>
+                  {% else %}
+                    <span class="prio-pill prio-low">Low</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if t.status == 'Assigned' %}
+                    <span class="badge badge-assigned">Assigned</span>
+                  {% elif t.status == 'In Progress' %}
+                    <span class="badge badge-in-progress">In Progress</span>
+                  {% elif t.status == 'Resolved' %}
+                    <span class="badge badge-resolved">Resolved</span>
+                  {% endif %}
+                </td>
+                <td style="font-size: 0.82rem; white-space: nowrap; color: var(--danger); font-weight: 600;">
+                  ⏰ {{ t.sla_deadline or 'Within 8 Hours' }}
+                </td>
+                <td>
+                  {% if t.status == 'Assigned' %}
+                    <!-- Start Work -->
+                    <form action="{{ url_for('staff_update_status') }}" method="POST" style="margin-bottom: 4px;">
+                      <input type="hidden" name="ticket_id" value="{{ t.ticket_id }}">
+                      <input type="hidden" name="status" value="In Progress">
+                      <input type="hidden" name="remarks" value="Technician arrived on site and commenced diagnostics.">
+                      <button type="submit" class="btn btn-sm btn-primary" style="width: 100%;">
+                        ▶ Start Work
+                      </button>
+                    </form>
+                  {% elif t.status == 'In Progress' %}
+                    <!-- Complete & Resolve Modal Trigger -->
+                    <button 
+                      type="button" 
+                      class="btn btn-sm btn-success" 
+                      style="width: 100%;" 
+                      onclick="openResolveModal('{{ t.ticket_id }}', '{{ t.title }}')"
+                    >
+                      ✓ Mark Resolved
+                    </button>
+                  {% else %}
+                    <span style="font-size: 0.82rem; color: #15803d; font-weight: 600;">
+                      ✓ Completed
+                    </span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% else %}
+              <tr>
+                <td colspan="7" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                  🎉 Great job! No pending work orders assigned right now.
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal: Resolve Work Order -->
+<div id="resolve-modal" class="modal-overlay">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--secondary);">Submit Work Completion Report</h3>
+      <button class="modal-close" style="background: none; border: none; font-size: 1.3rem; cursor: pointer;">✕</button>
+    </div>
+    <form action="{{ url_for('staff_update_status') }}" method="POST">
+      <div class="modal-body">
+        <input type="hidden" id="resolve-ticket-id" name="ticket_id">
+        <input type="hidden" name="status" value="Resolved">
+
+        <div class="form-group">
+          <label class="form-label">Ticket Reference</label>
+          <div id="resolve-ticket-display" style="font-size: 1.1rem; font-weight: 800; color: var(--primary); font-family: monospace;"></div>
+          <div id="resolve-title-display" style="font-size: 0.88rem; color: var(--text-muted); margin-top: 4px;"></div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="resolve-remarks">Technician Resolution Remarks <span class="required">*</span></label>
+          <textarea 
+            id="resolve-remarks" 
+            name="remarks" 
+            class="form-control" 
+            placeholder="Describe action taken (e.g. Replaced capacitor, tested voltage, reconfigured access point, cleaned drain valve)..." 
+            required
+            style="min-height: 100px;"
+          ></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline modal-close">Cancel</button>
+        <button type="submit" class="btn btn-success">✓ Submit Resolution & Notify Complainant</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function openResolveModal(ticketId, title) {
+  document.getElementById('resolve-ticket-id').value = ticketId;
+  document.getElementById('resolve-ticket-display').innerText = '#' + ticketId;
+  document.getElementById('resolve-title-display').innerText = title;
+  openModal('resolve-modal');
+}
+</script>
+{% endblock %}

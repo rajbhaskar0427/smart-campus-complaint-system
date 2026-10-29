@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Register Account - Lloyd Smart Campus{% endblock %}
+
+{% block content %}
+<div style="max-width: 580px; margin: 30px auto;">
+
+  <div class="card" style="box-shadow: var(--shadow-lg);">
+    <div class="card-header" style="text-align: center; flex-direction: column; padding: 26px 24px 16px;">
+      <h2 style="font-size: 1.45rem; font-weight: 800; color: var(--secondary);">Student & Faculty Registration</h2>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">
+        Register your college profile to lodge complaints and track facility resolutions
+      </p>
+    </div>
+
+    <div class="card-body" style="padding: 24px 28px;">
+      <form action="{{ url_for('register') }}" method="POST">
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="name">Full Name <span class="required">*</span></label>
+            <input type="text" id="name" name="name" class="form-control" placeholder="Bhaskar Raj" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="role">Role / Category <span class="required">*</span></label>
+            <select id="role" name="role" class="form-control" required>
+              <option value="student" selected>Student</option>
+              <option value="faculty">Faculty Member</option>
+              <option value="staff">Maintenance Staff</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="email">College Email ID <span class="required">*</span></label>
+          <input type="email" id="email" name="email" class="form-control" placeholder="yourname@lloyd.ac.in" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="roll_no">University Roll No. / Employee ID</label>
+            <input type="text" id="roll_no" name="roll_no" class="form-control" placeholder="2501530100041">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="department">Department</label>
+            <input type="text" id="department" name="department" class="form-control" placeholder="CSE, IT, ECE, Civil, etc.">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="phone">Phone / Mobile Number</label>
+            <input type="tel" id="phone" name="phone" class="form-control" placeholder="+91 98765 43210">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="password">Choose Password <span class="required">*</span></label>
+            <input type="password" id="password" name="password" class="form-control" placeholder="••••••••" required>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; font-weight: 700; margin-top: 14px;">
+          Create My Campus Account
+        </button>
+      </form>
+
+      <div style="text-align: center; margin-top: 20px; font-size: 0.88rem; color: var(--text-muted);">
+        Already registered? 
+        <a href="{{ url_for('login') }}" style="color: var(--primary); font-weight: 700; text-decoration: none;">
+          Sign in here
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+{% endblock %}

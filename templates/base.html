@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}{{ system_title }}{% endblock %} | Lloyd Institute of Engineering & Technology</title>
+  
+  <!-- Main Styles -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/simulation.css') }}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+  <!-- Quick Demo Role Switcher Bar (For Viva, Evaluation & Demo) -->
+  <div class="demo-role-bar">
+    <div class="demo-title">
+      <span>⚡ Quick Demo Switcher:</span>
+      {% if g.user %}
+        <span style="color:#f8fafc; font-weight: normal;">Active: <b>{{ g.user.name }}</b> ({{ g.user.role|capitalize }})</span>
+      {% else %}
+        <span style="color:#94a3b8; font-weight: normal;">Guest View</span>
+      {% endif %}
+    </div>
+    <div class="demo-chips">
+      <a href="{{ url_for('login', demo='student') }}" class="chip-btn {% if g.user and g.user.email == 'bhaskar@lloyd.ac.in' %}active{% endif %}">
+        👨‍🎓 Student: Bhaskar Raj
+      </a>
+      <a href="{{ url_for('login', demo='admin') }}" class="chip-btn {% if g.user and g.user.role == 'admin' %}active{% endif %}">
+        👨‍🏫 Admin: Prof. Vishal Gupta
+      </a>
+      <a href="{{ url_for('login', demo='staff_elec') }}" class="chip-btn {% if g.user and g.user.email == 'ramesh.elec@lloyd.ac.in' %}active{% endif %}">
+        🔧 Staff: Ramesh (Electrician)
+      </a>
+      <a href="{{ url_for('login', demo='staff_it') }}" class="chip-btn {% if g.user and g.user.email == 'rajesh.it@lloyd.ac.in' %}active{% endif %}">
+        💻 Staff: Rajesh (Network)
+      </a>
+      {% if g.user %}
+        <a href="{{ url_for('logout') }}" class="chip-btn" style="background: rgba(239, 68, 68, 0.2); border-color: #ef4444; color: #fca5a5;">
+          🚪 Logout
+        </a>
+      {% else %}
+        <a href="{{ url_for('login') }}" class="chip-btn">
+          🔑 Custom Login
+        </a>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Primary Navigation -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="{{ url_for('index') }}" class="brand">
+        <div class="brand-logo-badge">LIET</div>
+        <div class="brand-text">
+          <h1>Smart Campus Complaint System</h1>
+          <p>Lloyd Institute of Engg. & Tech. (AKTU)</p>
+        </div>
+      </a>
+
+      <ul class="nav-links">
+        <li><a href="{{ url_for('index') }}" class="nav-link {% if request.endpoint == 'index' %}active{% endif %}">🏛️ Home</a></li>
+        <li><a href="{{ url_for('submit_complaint') }}" class="nav-link nav-cta">➕ Lodge Complaint</a></li>
+        <li><a href="{{ url_for('track_index') }}" class="nav-link {% if request.endpoint in ('track_index', 'track_complaint') %}active{% endif %}">🔍 Track Ticket</a></li>
+        <li><a href="{{ url_for('simulation_view') }}" class="nav-link {% if request.endpoint == 'simulation_view' %}active{% endif %}" style="color: #6366f1;">
+          🌐 Digital Twin & Sim
+          {% if global_escalated_count > 0 %}
+            <span class="badge-counter">{{ global_escalated_count }}</span>
+          {% endif %}
+        </a></li>
+        <li><a href="{{ url_for('qr_scanner') }}" class="nav-link {% if request.endpoint == 'qr_scanner' %}active{% endif %}">📷 QR Scan</a></li>
+        <li><a href="{{ url_for('analytics') }}" class="nav-link {% if request.endpoint == 'analytics' %}active{% endif %}">📊 Analytics</a></li>
+
+        {% if g.user %}
+          {% if g.user.role == 'admin' %}
+            <li><a href="{{ url_for('admin_dashboard') }}" class="nav-link {% if request.endpoint == 'admin_dashboard' %}active{% endif %}" style="color: #b91c1c; font-weight:700;">⚙️ Admin Console</a></li>
+          {% elif g.user.role == 'staff' %}
+            <li><a href="{{ url_for('staff_dashboard') }}" class="nav-link {% if request.endpoint == 'staff_dashboard' %}active{% endif %}" style="color: #059669; font-weight:700;">🛠️ Staff Tasks</a></li>
+          {% else %}
+            <li><a href="{{ url_for('user_dashboard') }}" class="nav-link {% if request.endpoint == 'user_dashboard' %}active{% endif %}">👤 My Dashboard</a></li>
+          {% endif %}
+        {% else %}
+          <li><a href="{{ url_for('login') }}" class="nav-link">🔑 Login</a></li>
+        {% endif %}
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Flash Message Container -->
+  <div class="flash-container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }}">
+            <span>{{ message }}</span>
+            <button class="alert-close" onclick="this.parentElement.remove()">✕</button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+  </div>
+
+  <!-- Main Content Area -->
+  <main class="main-content">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="footer-col">
+        <h4>🏛️ Lloyd Institute of Engineering & Technology</h4>
+        <p>Plot No. 3, Knowledge Park II, Greater Noida, Uttar Pradesh 201306</p>
+        <p>Affiliated to Dr. A.P.J. Abdul Kalam Technical University (AKTU), Lucknow</p>
+        <p style="margin-top: 10px; color: #38bdf8;">Academic Session 2026-27 | CSE Mini Project</p>
+      </div>
+
+      <div class="footer-col">
+        <h4>📋 Project Synopsis Details</h4>
+        <p><b>Student:</b> Bhaskar Raj</p>
+        <p><b>Roll Number:</b> 2501530100041 | <b>Section:</b> 2A</p>
+        <p><b>Supervisor:</b> Prof. Vishal Gupta (Assistant Professor)</p>
+        <p><b>Department:</b> Computer Science & Engineering</p>
+      </div>
+
+      <div class="footer-col">
+        <h4>⚡ Core Architecture Highlights</h4>
+        <p>• Multi-role RBAC (Student, Staff, Admin)</p>
+        <p>• Automated SLA Tracking & Auto-Escalation</p>
+        <p>• Real-time Duplicate Detection Engine</p>
+        <p>• Interactive Campus 2.5D Digital Twin & QR Scanner</p>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <div>&copy; 2026 Smart Campus Complaint System. Developed for LIET & AKTU evaluation.</div>
+      <div>
+        <a href="{{ url_for('export_csv') }}" style="color: #38bdf8; text-decoration: none; margin-right: 15px;">📥 Export All Tickets (CSV)</a>
+        <a href="{{ url_for('simulation_view') }}" style="color: #38bdf8; text-decoration: none;">🌐 Live Simulator</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>

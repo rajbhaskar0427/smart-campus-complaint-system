@@ -1,0 +1,382 @@
+/* Simulation & Digital Twin Stylesheet */
+
+/* Simulation Control Room */
+.sim-header {
+  background: linear-gradient(135deg, #0f172a, #1e1b4b);
+  border-radius: var(--radius-xl);
+  padding: 32px 36px;
+  color: white;
+  margin-bottom: 28px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.25);
+}
+
+.sim-header-info h2 {
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: #38bdf8;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sim-header-info p {
+  color: #cbd5e1;
+  font-size: 0.95rem;
+  margin-top: 6px;
+  max-width: 600px;
+}
+
+.sim-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+/* Simulation Action Buttons */
+.btn-sim-alert {
+  background: linear-gradient(135deg, #ef4444, #b91c1c);
+  color: white;
+  border: none;
+  font-weight: 700;
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+}
+.btn-sim-alert:hover {
+  background: linear-gradient(135deg, #dc2626, #991b1b);
+  transform: translateY(-2px);
+}
+
+.btn-sim-escalate {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #0f172a;
+  border: none;
+  font-weight: 700;
+  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+}
+.btn-sim-escalate:hover {
+  background: linear-gradient(135deg, #d97706, #b45309);
+  color: white;
+  transform: translateY(-2px);
+}
+
+.btn-sim-worker {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  border: none;
+  font-weight: 700;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+}
+.btn-sim-worker:hover {
+  background: linear-gradient(135deg, #059669, #047857);
+  transform: translateY(-2px);
+}
+
+/* Interactive Campus Digital Twin Map */
+.campus-map-card {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  margin-bottom: 32px;
+}
+
+.campus-map-wrapper {
+  position: relative;
+  background: linear-gradient(145deg, #091322 0%, #0f172a 100%);
+  min-height: 480px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 30px 20px;
+  overflow: hidden;
+}
+
+/* Interactive SVG Map Elements */
+.campus-svg {
+  width: 100%;
+  max-width: 900px;
+  height: auto;
+  filter: drop-shadow(0 15px 30px rgba(0, 0, 0, 0.6));
+}
+
+.building-polygon {
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  fill-opacity: 0.85;
+}
+
+.building-polygon:hover {
+  fill-opacity: 1;
+  stroke: #38bdf8 !important;
+  stroke-width: 3px !important;
+  filter: brightness(1.2);
+}
+
+.building-label {
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  fill: #f8fafc;
+  pointer-events: none;
+  text-anchor: middle;
+}
+
+/* Pulsing Campus Pin */
+.map-pin {
+  cursor: pointer;
+  transform-origin: center;
+  transition: transform 0.2s;
+}
+
+.map-pin:hover {
+  transform: scale(1.3);
+}
+
+.pin-pulse {
+  animation: svgPulse 2s infinite ease-out;
+  transform-origin: center;
+}
+
+@keyframes svgPulse {
+  0% { r: 8px; opacity: 0.9; }
+  70% { r: 24px; opacity: 0; }
+  100% { r: 26px; opacity: 0; }
+}
+
+/* Building Info Drawer / Popover */
+.map-drawer {
+  background: white;
+  border-top: 1px solid var(--border);
+  padding: 20px 24px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.drawer-info h3 {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--secondary);
+}
+
+.drawer-info p {
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  margin-top: 4px;
+}
+
+/* IoT Telemetry Grid */
+.iot-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 18px;
+  margin-bottom: 32px;
+}
+
+.sensor-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
+}
+
+.sensor-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 5px;
+}
+
+.sensor-card.normal::before { background: var(--success); }
+.sensor-card.warning::before { background: var(--warning); }
+.sensor-card.critical::before { background: var(--danger); }
+
+.sensor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.sensor-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--secondary);
+}
+
+.sensor-location {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sensor-telemetry {
+  background: #f8fafc;
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  margin: 12px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sensor-reading {
+  font-family: monospace;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--secondary);
+}
+
+/* Live Simulation Console Log */
+.sim-console {
+  background: #090d16;
+  border-radius: var(--radius-lg);
+  border: 1px solid #1e293b;
+  padding: 20px;
+  font-family: "Courier New", Courier, monospace;
+  color: #38bdf8;
+  font-size: 0.86rem;
+  line-height: 1.6;
+  max-height: 240px;
+  overflow-y: auto;
+  box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+.console-entry {
+  margin-bottom: 4px;
+  display: flex;
+  gap: 8px;
+}
+
+.console-ts {
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+.console-tag {
+  color: #a855f7;
+  font-weight: bold;
+}
+
+/* QR Code Scanner Simulation */
+.qr-scanner-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .qr-scanner-container { grid-template-columns: 1fr; }
+}
+
+.qr-camera-viewport {
+  background: #0f172a;
+  border-radius: var(--radius-xl);
+  height: 380px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  border: 2px solid #334155;
+}
+
+.camera-grid {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image: 
+    linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 30px 30px;
+}
+
+.scan-target-box {
+  width: 220px;
+  height: 220px;
+  border: 2px dashed rgba(56, 189, 248, 0.6);
+  position: relative;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.target-corner {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-color: #38bdf8;
+  border-style: solid;
+}
+.tc-tl { top: -2px; left: -2px; border-width: 4px 0 0 4px; }
+.tc-tr { top: -2px; right: -2px; border-width: 4px 4px 0 0; }
+.tc-bl { bottom: -2px; left: -2px; border-width: 0 0 4px 4px; }
+.tc-br { bottom: -2px; right: -2px; border-width: 0 4px 4px 0; }
+
+.laser-beam {
+  position: absolute;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #10b981, #38bdf8, #10b981, transparent);
+  box-shadow: 0 0 15px #10b981, 0 0 8px #38bdf8;
+  top: 0;
+  animation: laserScan 2.4s ease-in-out infinite alternate;
+}
+
+@keyframes laserScan {
+  0% { top: 10%; }
+  100% { top: 90%; }
+}
+
+.qr-demo-plaques {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.qr-plaque-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 14px 18px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.qr-plaque-card:hover {
+  border-color: var(--primary);
+  background: #f0fdf4;
+  transform: translateX(4px);
+  box-shadow: var(--shadow-sm);
+}
+
+.plaque-tag {
+  font-family: monospace;
+  font-weight: 700;
+  color: var(--primary);
+  background: #e0f2fe;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+}

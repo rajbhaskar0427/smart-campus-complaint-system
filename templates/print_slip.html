@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Grievance Slip #{{ ticket.ticket_id }} | LIET</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      margin: 0;
+      padding: 30px;
+      color: #0f172a;
+      background: #ffffff;
+      font-size: 13px;
+    }
+    .slip-container {
+      max-width: 720px;
+      margin: 0 auto;
+      border: 2px solid #0f172a;
+      padding: 24px;
+      border-radius: 8px;
+    }
+    .header {
+      text-align: center;
+      border-bottom: 2px solid #0f172a;
+      padding-bottom: 14px;
+      margin-bottom: 18px;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .header h2 {
+      margin: 4px 0 0;
+      font-size: 13px;
+      color: #334155;
+      font-weight: 600;
+    }
+    .header p {
+      margin: 2px 0 0;
+      font-size: 11px;
+      color: #64748b;
+    }
+    .ticket-badge-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #f1f5f9;
+      padding: 10px 14px;
+      border-radius: 6px;
+      margin-bottom: 18px;
+      font-weight: 700;
+    }
+    .ticket-id {
+      font-family: monospace;
+      font-size: 16px;
+      color: #1e40af;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 16px;
+    }
+    table td, table th {
+      border: 1px solid #cbd5e1;
+      padding: 8px 10px;
+      font-size: 12px;
+      text-align: left;
+    }
+    table th {
+      background: #f8fafc;
+      width: 25%;
+      color: #475569;
+    }
+    .timeline-box {
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 10px 14px;
+      margin-bottom: 20px;
+      background: #fafafa;
+    }
+    .timeline-entry {
+      font-size: 11px;
+      padding: 3px 0;
+      border-bottom: 1px dashed #e2e8f0;
+    }
+    .timeline-entry:last-child {
+      border-bottom: none;
+    }
+    .signatures {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 40px;
+      padding-top: 10px;
+    }
+    .sig-line {
+      width: 200px;
+      border-top: 1px solid #0f172a;
+      text-align: center;
+      padding-top: 6px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .no-print {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .btn-print {
+      background: #1e40af;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    @media print {
+      .no-print { display: none; }
+      body { padding: 0; }
+      .slip-container { border: 1px solid #000; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="no-print">
+    <button class="btn-print" onclick="window.print()">🖨️ Print Grievance Docket Slip</button>
+  </div>
+
+  <div class="slip-container">
+    <div class="header">
+      <h1>Lloyd Institute of Engineering & Technology</h1>
+      <h2>Department of Computer Science & Engineering</h2>
+      <p>Plot No. 3, Knowledge Park II, Greater Noida, UP 201306 | Affiliated to AKTU, Lucknow</p>
+      <p style="font-weight: 700; color: #1e40af; margin-top: 4px;">OFFICIAL SMART CAMPUS GRIEVANCE DOCKET</p>
+    </div>
+
+    <div class="ticket-badge-row">
+      <div>
+        <span>DOCKET NO: </span>
+        <span class="ticket-id">{{ ticket.ticket_id }}</span>
+      </div>
+      <div>
+        <span>STATUS: </span>
+        <span>{{ ticket.status|upper }}</span>
+        {% if ticket.is_escalated %}
+          <span style="color: #dc2626;">(ESCALATED)</span>
+        {% endif %}
+      </div>
+      <div>
+        <span>PRIORITY: </span>
+        <span>{{ ticket.priority|upper }}</span>
+      </div>
+    </div>
+
+    <table>
+      <tr>
+        <th>Complainant Name</th>
+        <td><b>{{ ticket.user_name }}</b></td>
+        <th>University Roll / ID</th>
+        <td>{{ ticket.user_roll or 'N/A' }}</td>
+      </tr>
+      <tr>
+        <th>Email ID</th>
+        <td>{{ ticket.user_email }}</td>
+        <th>Lodged Timestamp</th>
+        <td>{{ ticket.created_at }}</td>
+      </tr>
+      <tr>
+        <th>Facility Block</th>
+        <td><b>{{ ticket.building_block }}</b></td>
+        <th>Exact Room / Spot</th>
+        <td>{{ ticket.room_location }}</td>
+      </tr>
+      <tr>
+        <th>Category</th>
+        <td>{{ ticket.category }}</td>
+        <th>Assigned Dept</th>
+        <td>{{ ticket.dept_name or 'Unassigned' }}</td>
+      </tr>
+      <tr>
+        <th>SLA Target Deadline</th>
+        <td>{{ ticket.sla_deadline or 'Within 24 Hours' }}</td>
+        <th>Assigned Staff</th>
+        <td>{{ ticket.assigned_staff_name or 'Pending Dispatch' }}</td>
+      </tr>
+      <tr>
+        <th>Complaint Subject</th>
+        <td colspan="3"><b>{{ ticket.title }}</b></td>
+      </tr>
+      <tr>
+        <th>Issue Description</th>
+        <td colspan="3">{{ ticket.description }}</td>
+      </tr>
+      {% if ticket.resolution_remarks %}
+        <tr>
+          <th>Technician Resolution</th>
+          <td colspan="3" style="color: #15803d; font-weight: 600;">{{ ticket.resolution_remarks }}</td>
+        </tr>
+      {% endif %}
+    </table>
+
+    <div class="timeline-box">
+      <div style="font-weight: 700; margin-bottom: 6px; font-size: 11px; text-transform: uppercase;">
+        Audit Log Trail
+      </div>
+      {% for log in logs %}
+        <div class="timeline-entry">
+          <b>[{{ log.created_at }}]</b> {{ log.action }} - by {{ log.performed_by }} ({{ log.role }}): {{ log.notes }}
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="signatures">
+      <div class="sig-line">
+        Complainant Signature<br>
+        ({{ ticket.user_name }})
+      </div>
+      <div class="sig-line">
+        Maintenance In-Charge / Supervisor<br>
+        (Prof. Vishal Gupta)
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

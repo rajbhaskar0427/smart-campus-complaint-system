@@ -1,0 +1,358 @@
+{% extends "base.html" %}
+
+{% block title %}Interactive Campus Digital Twin & Incident Simulator{% endblock %}
+
+{% block content %}
+<div>
+
+  <!-- Simulation Control Room Header -->
+  <div class="sim-header">
+    <div class="sim-header-info">
+      <h2>🌐 Campus Digital Twin & Incident Simulator</h2>
+      <p>
+        An interactive simulation sandbox modeling real-time facility telemetry, automatic incident routing, 
+        and SLA escalation across the Lloyd Institute Knowledge Park II campus.
+      </p>
+    </div>
+    <div class="sim-actions">
+      <button class="btn btn-sim-alert" onclick="runIoTSimulation()">
+        ⚡ Trigger IoT Sensor Anomaly
+      </button>
+      <button class="btn btn-sim-escalate" onclick="runAutoEscalation()">
+        🚨 Run SLA Auto-Escalation
+      </button>
+      <button class="btn btn-sim-worker" onclick="runWorkerResolveDemo()">
+        👷 Dispatch & Resolve Demo
+      </button>
+    </div>
+  </div>
+
+  <!-- Interactive 2.5D Campus Digital Twin Map -->
+  <div class="campus-map-card">
+    <div class="card-header" style="background: #0f172a; color: white; border-color: #1e293b;">
+      <h3 style="color: #38bdf8;">🗺️ Interactive Campus Map - Knowledge Park II, Greater Noida</h3>
+      <span style="font-size: 0.82rem; color: #94a3b8;">Click any block or pin to inspect live facility status</span>
+    </div>
+
+    <div class="campus-map-wrapper">
+      <svg class="campus-svg" viewBox="0 0 920 540" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="grad-block-a" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#1e3a8a"/>
+            <stop offset="100%" stop-color="#2563eb"/>
+          </linearGradient>
+          <linearGradient id="grad-block-b" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#0369a1"/>
+            <stop offset="100%" stop-color="#0284c7"/>
+          </linearGradient>
+          <linearGradient id="grad-lib" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#4338ca"/>
+            <stop offset="100%" stop-color="#6366f1"/>
+          </linearGradient>
+          <linearGradient id="grad-hostel" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#334155"/>
+            <stop offset="100%" stop-color="#475569"/>
+          </linearGradient>
+          <linearGradient id="grad-cafe" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#b45309"/>
+            <stop offset="100%" stop-color="#d97706"/>
+          </linearGradient>
+          <linearGradient id="grad-ground" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#064e3b"/>
+            <stop offset="100%" stop-color="#047857"/>
+          </linearGradient>
+
+          <!-- Shadow Filter -->
+          <filter id="building-shadow" x="-10%" y="-10%" width="130%" height="130%">
+            <feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#000000" flood-opacity="0.5"/>
+          </filter>
+        </defs>
+
+        <!-- Campus Pathways / Roads -->
+        <path d="M 60 270 L 860 270" stroke="#334155" stroke-width="18" stroke-dasharray="12 6" fill="none" opacity="0.6"/>
+        <path d="M 460 50 L 460 490" stroke="#334155" stroke-width="18" stroke-dasharray="12 6" fill="none" opacity="0.6"/>
+        <circle cx="460" cy="270" r="45" fill="#1e293b" stroke="#38bdf8" stroke-width="2"/>
+        <text x="460" y="275" font-size="11" fill="#38bdf8" font-weight="bold" text-anchor="middle">CENTRAL PLAZA</text>
+
+        <!-- 1. Academic Block A -->
+        <g class="map-building-group" onclick="selectBuilding('Block A - Academic')">
+          <polygon 
+            class="building-polygon" 
+            data-building="Block A - Academic"
+            points="80,80 280,80 300,190 60,190" 
+            fill="url(#grad-block-a)" 
+            stroke="#60a5fa" 
+            stroke-width="2"
+            filter="url(#building-shadow)"
+          />
+          <text x="180" y="130" class="building-label">BLOCK A</text>
+          <text x="180" y="150" font-size="10" fill="#bfdbfe" text-anchor="middle">Academic & Lecture Halls</text>
+          
+          <!-- Pulsing Pin -->
+          <g class="map-pin" transform="translate(180, 80)">
+            <circle class="pin-pulse" cx="0" cy="0" r="14" fill="#ef4444"/>
+            <circle cx="0" cy="0" r="9" fill="#ef4444" stroke="#ffffff" stroke-width="2"/>
+            <text x="0" y="3" font-size="9" font-weight="bold" fill="white" text-anchor="middle">!</text>
+          </g>
+        </g>
+
+        <!-- 2. Block B - CS & IT Labs -->
+        <g class="map-building-group" onclick="selectBuilding('Block B - CS Labs')">
+          <polygon 
+            class="building-polygon" 
+            data-building="Block B - CS Labs"
+            points="620,80 840,80 860,190 600,190" 
+            fill="url(#grad-block-b)" 
+            stroke="#38bdf8" 
+            stroke-width="2"
+            filter="url(#building-shadow)"
+          />
+          <text x="730" y="130" class="building-label">BLOCK B (CSE / IT)</text>
+          <text x="730" y="150" font-size="10" fill="#bae6fd" text-anchor="middle">Computing Labs & AI Center</text>
+
+          <!-- Pulsing Pin -->
+          <g class="map-pin" transform="translate(730, 80)">
+            <circle class="pin-pulse" cx="0" cy="0" r="14" fill="#3b82f6"/>
+            <circle cx="0" cy="0" r="9" fill="#2563eb" stroke="#ffffff" stroke-width="2"/>
+            <text x="0" y="3" font-size="9" font-weight="bold" fill="white" text-anchor="middle">1</text>
+          </g>
+        </g>
+
+        <!-- 3. Central Library -->
+        <g class="map-building-group" onclick="selectBuilding('Central Library')">
+          <polygon 
+            class="building-polygon" 
+            data-building="Central Library"
+            points="340,60 580,60 560,170 360,170" 
+            fill="url(#grad-lib)" 
+            stroke="#818cf8" 
+            stroke-width="2"
+            filter="url(#building-shadow)"
+          />
+          <text x="460" y="110" class="building-label">APJ KALAM LIBRARY</text>
+          <text x="460" y="130" font-size="10" fill="#c7d2fe" text-anchor="middle">Digital Reading Archive</text>
+          
+          <g class="map-pin" transform="translate(460, 60)">
+            <circle class="pin-pulse" cx="0" cy="0" r="14" fill="#f59e0b"/>
+            <circle cx="0" cy="0" r="9" fill="#d97706" stroke="#ffffff" stroke-width="2"/>
+            <text x="0" y="3" font-size="9" font-weight="bold" fill="white" text-anchor="middle">1</text>
+          </g>
+        </g>
+
+        <!-- 4. Ramanujan Boys Hostel 1 -->
+        <g class="map-building-group" onclick="selectBuilding('Boys Hostel 1')">
+          <polygon 
+            class="building-polygon" 
+            data-building="Boys Hostel 1"
+            points="70,340 270,340 250,470 50,470" 
+            fill="url(#grad-hostel)" 
+            stroke="#94a3b8" 
+            stroke-width="2"
+            filter="url(#building-shadow)"
+          />
+          <text x="160" y="400" class="building-label">BOYS HOSTEL 1</text>
+          <text x="160" y="420" font-size="10" fill="#cbd5e1" text-anchor="middle">Ramanujan Residence</text>
+
+          <g class="map-pin" transform="translate(160, 340)">
+            <circle class="pin-pulse" cx="0" cy="0" r="14" fill="#10b981"/>
+            <circle cx="0" cy="0" r="9" fill="#059669" stroke="#ffffff" stroke-width="2"/>
+            <text x="0" y="3" font-size="9" font-weight="bold" fill="white" text-anchor="middle">✓</text>
+          </g>
+        </g>
+
+        <!-- 5. Girls Hostel -->
+        <g class="map-building-group" onclick="selectBuilding('Girls Hostel')">
+          <polygon 
+            class="building-polygon" 
+            data-building="Girls Hostel"
+            points="650,340 850,340 830,470 630,470" 
+            fill="url(#grad-hostel)" 
+            stroke="#f43f5e" 
+            stroke-width="2"
+            filter="url(#building-shadow)"
+          />
+          <text x="740" y="400" class="building-label">GIRLS HOSTEL</text>
+          <text x="740" y="420" font-size="10" fill="#cbd5e1" text-anchor="middle">Kalpana Chawla Hall</text>
+
+          <g class="map-pin" transform="translate(740, 340)">
+            <circle class="pin-pulse" cx="0" cy="0" r="14" fill="#ef4444"/>
+            <circle cx="0" cy="0" r="9" fill="#ef4444" stroke="#ffffff" stroke-width="2"/>
+            <text x="0" y="3" font-size="9" font-weight="bold" fill="white" text-anchor="middle">🚨</text>
+          </g>
+        </g>
+
+        <!-- 6. Student Cafeteria -->
+        <g class="map-building-group" onclick="selectBuilding('Student Cafeteria')">
+          <polygon 
+            class="building-polygon" 
+            data-building="Student Cafeteria"
+            points="320,330 460,330 450,450 310,450" 
+            fill="url(#grad-cafe)" 
+            stroke="#fbbf24" 
+            stroke-width="2"
+            filter="url(#building-shadow)"
+          />
+          <text x="385" y="385" class="building-label" font-size="11">CAFETERIA</text>
+          <text x="385" y="405" font-size="9" fill="#fef3c7" text-anchor="middle">Food Court</text>
+        </g>
+
+        <!-- 7. Sports Arena -->
+        <g class="map-building-group" onclick="selectBuilding('Sports Arena')">
+          <polygon 
+            class="building-polygon" 
+            data-building="Sports Arena"
+            points="480,330 610,330 600,450 470,450" 
+            fill="url(#grad-ground)" 
+            stroke="#34d399" 
+            stroke-width="2"
+            filter="url(#building-shadow)"
+          />
+          <text x="540" y="385" class="building-label" font-size="11">SPORTS ARENA</text>
+          <text x="540" y="405" font-size="9" fill="#d1fae5" text-anchor="middle">Turf & Courts</text>
+        </g>
+
+      </svg>
+    </div>
+
+    <!-- Map Info Drawer -->
+    <div class="map-drawer">
+      <div class="drawer-info">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <h3 id="drawer-building-title">Block B - CSE & IT Complex</h3>
+          <span id="drawer-building-count" class="badge badge-assigned">1 Active Ticket</span>
+        </div>
+        <p id="drawer-building-desc">Advanced computing labs, AI/ML center, high-speed campus server room, and network NOC.</p>
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <a id="drawer-btn-report" href="{{ url_for('submit_complaint', building='Block B - CS Labs') }}" class="btn btn-primary">
+          ➕ Report Issue in this Block
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Live Simulation Console -->
+  <div class="card" style="margin-bottom: 32px;">
+    <div class="card-header" style="background: #090d16; color: #38bdf8; border-color: #1e293b;">
+      <h3 style="color: #38bdf8; font-size: 1rem;">💻 Real-Time SLA Engine & Telemetry Stream</h3>
+      <span style="font-size: 0.8rem; color: #64748b;">Autonomous Simulation Event Stream</span>
+    </div>
+    <div class="card-body" style="background: #090d16; padding: 16px;">
+      <div id="sim-live-console" class="sim-console"></div>
+    </div>
+  </div>
+
+  <!-- IoT Campus Telemetry Sensor Grid -->
+  <div style="margin-bottom: 32px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+      <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--secondary); display: flex; align-items: center; gap: 8px;">
+        <span>📡 Wireless Campus Telemetry Sensor Nodes (IoT)</span>
+      </h3>
+      <span style="font-size: 0.85rem; color: var(--text-muted);">Auto-ingests anomalies into Critical Complaints</span>
+    </div>
+
+    <div class="iot-grid">
+      {% for s in sensors %}
+        <div class="sensor-card {{ s.status|lower }}">
+          <div class="sensor-header">
+            <span class="sensor-name">{{ s.name }}</span>
+            {% if s.status == 'Normal' %}
+              <span class="badge badge-resolved">Normal</span>
+            {% elif s.status == 'Warning' %}
+              <span class="badge badge-submitted">Warning</span>
+            {% else %}
+              <span class="badge badge-escalated">Critical</span>
+            {% endif %}
+          </div>
+
+          <div class="sensor-location">
+            📍 {{ s.building_block }} &bull; {{ s.location }}
+          </div>
+
+          <div class="sensor-telemetry">
+            <span style="font-size: 0.78rem; color: var(--text-muted); text-transform: uppercase;">Telemetry</span>
+            <span class="sensor-reading">{{ s.last_reading }}</span>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem; color: var(--text-subtle);">
+            <span>Node ID: {{ s.sensor_id }}</span>
+            <button class="btn btn-sm btn-outline" style="padding: 2px 8px; font-size: 0.75rem;" onclick="runIoTSimulation('{{ s.sensor_id }}')">
+              Trigger Event
+            </button>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Active Tickets Filtered by Building in Map -->
+  <div class="card">
+    <div class="card-header">
+      <h3>📋 Active Complaints by Building Block</h3>
+    </div>
+    <div class="card-body" style="padding: 0;">
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Ticket ID</th>
+              <th>Building Block</th>
+              <th>Room / Spot</th>
+              <th>Subject</th>
+              <th>Priority</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for c in active_complaints %}
+              <tr class="building-complaint-row" data-building="{{ c.building_block }}">
+                <td>
+                  <a href="{{ url_for('track_complaint', ticket_id=c.ticket_id) }}" class="ticket-code">
+                    #{{ c.ticket_id }}
+                  </a>
+                </td>
+                <td style="font-weight: 700;">{{ c.building_block }}</td>
+                <td>{{ c.room_location }}</td>
+                <td>{{ c.title }}</td>
+                <td>
+                  {% if c.priority == 'Critical' %}
+                    <span class="prio-pill prio-critical">Critical</span>
+                  {% elif c.priority == 'High' %}
+                    <span class="prio-pill prio-high">High</span>
+                  {% else %}
+                    <span class="prio-pill prio-medium">{{ c.priority }}</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if c.status == 'Submitted' %}
+                    <span class="badge badge-submitted">Submitted</span>
+                  {% elif c.status == 'Assigned' %}
+                    <span class="badge badge-assigned">Assigned</span>
+                  {% elif c.status == 'In Progress' %}
+                    <span class="badge badge-in-progress">In Progress</span>
+                  {% endif %}
+                  {% if c.is_escalated %}
+                    <span class="badge badge-escalated">Escalated</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <a href="{{ url_for('track_complaint', ticket_id=c.ticket_id) }}" class="btn btn-sm btn-outline">
+                    Track
+                  </a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/campus_map.js') }}"></script>
+<script src="{{ url_for('static', filename='js/simulator.js') }}"></script>
+{% endblock %}

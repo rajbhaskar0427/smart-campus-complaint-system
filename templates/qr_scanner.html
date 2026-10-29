@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}Facility QR Scanner Simulation - Lloyd Smart Campus{% endblock %}
+
+{% block content %}
+<div style="max-width: 950px; margin: 0 auto;">
+
+  <!-- Header -->
+  <div style="text-align: center; margin-bottom: 30px;">
+    <div style="display: inline-flex; align-items: center; gap: 6px; background: #e0f2fe; color: #0369a1; padding: 4px 14px; border-radius: var(--radius-full); font-size: 0.8rem; font-weight: 700; text-transform: uppercase; margin-bottom: 10px;">
+      📷 Smart Facility Scanning
+    </div>
+    <h2 style="font-size: 2rem; font-weight: 800; color: var(--secondary);">Scan Campus Door QR Plaque</h2>
+    <p style="color: var(--text-muted); max-width: 620px; margin: 6px auto 0; font-size: 0.95rem;">
+      Every classroom, laboratory, washroom, and hostel floor at Lloyd Institute is equipped with an encrypted QR plaque. 
+      Scanning instantly presets location and routes grievances directly to the in-charge department.
+    </p>
+  </div>
+
+  <div class="qr-scanner-container">
+    
+    <!-- Camera Viewport Simulator -->
+    <div>
+      <div class="qr-camera-viewport">
+        <div class="camera-grid"></div>
+        <div class="laser-beam"></div>
+        <div class="scan-target-box">
+          <div class="target-corner tc-tl"></div>
+          <div class="target-corner tc-tr"></div>
+          <div class="target-corner tc-bl"></div>
+          <div class="target-corner tc-br"></div>
+          <div style="color: rgba(255, 255, 255, 0.7); text-align: center; font-size: 0.85rem; font-weight: 600;">
+            <div style="font-size: 2.2rem; margin-bottom: 6px;">📱</div>
+            Point at Campus Plaque
+          </div>
+        </div>
+      </div>
+
+      <div style="text-align: center; margin-top: 14px; font-size: 0.85rem; color: var(--text-muted);">
+        🟢 Camera stream emulator active &bull; Auto-detecting 2D DataMatrix & QR
+      </div>
+    </div>
+
+    <!-- Campus Facility Plaques Selector -->
+    <div>
+      <div class="card" style="margin-bottom: 0;">
+        <div class="card-header">
+          <h3>🏷️ Campus Room QR Plaques (Interactive)</h3>
+          <span style="font-size: 0.78rem; color: var(--text-muted);">Click to simulate scan</span>
+        </div>
+        <div class="card-body">
+          <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 14px;">
+            Select any room plaque below to test instantaneous QR recognition and complaint auto-fill:
+          </p>
+
+          <div class="qr-demo-plaques">
+            {% for qr in qr_presets %}
+              <div 
+                class="qr-plaque-card" 
+                onclick="simulateQrScan('{{ qr.code }}', '{{ qr.building }}', '{{ qr.room }}', '{{ qr.category }}', '{{ qr.suggested_title }}')"
+              >
+                <div>
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <span class="plaque-tag">{{ qr.code }}</span>
+                    <b style="color: var(--secondary); font-size: 0.92rem;">{{ qr.room }}</b>
+                  </div>
+                  <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">
+                    📍 {{ qr.building }} &bull; Dept: <span style="color: var(--primary);">{{ qr.category }}</span>
+                  </div>
+                </div>
+                <div style="font-size: 1.4rem;">📷</div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+function simulateQrScan(code, building, room, category, title) {
+  showToast(`🎯 QR Plaque '${code}' detected! Decoding facility coordinates...`, 'info');
+  
+  // Highlight laser effect
+  const laser = document.querySelector('.laser-beam');
+  if (laser) {
+    laser.style.background = '#10b981';
+    laser.style.boxShadow = '0 0 25px #10b981';
+  }
+
+  setTimeout(() => {
+    showToast(`✓ Decoded: ${room} (${building})`, 'success');
+    setTimeout(() => {
+      window.location.href = `/submit?building=${encodeURIComponent(building)}&room=${encodeURIComponent(room)}&category=${encodeURIComponent(category)}&title=${encodeURIComponent(title)}`;
+    }, 700);
+  }, 500);
+}
+</script>
+{% endblock %}

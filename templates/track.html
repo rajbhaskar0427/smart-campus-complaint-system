@@ -1,0 +1,288 @@
+{% extends "base.html" %}
+
+{% block title %}Track Ticket #{{ ticket.ticket_id if ticket else 'Lookup' }} - Smart Campus{% endblock %}
+
+{% block content %}
+<div style="max-width: 950px; margin: 0 auto;">
+
+  <!-- Search Ticket Box -->
+  <div class="card" style="margin-bottom: 24px;">
+    <div class="card-body" style="padding: 20px 24px;">
+      <form action="{{ url_for('track_index') }}" method="GET" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+        <span style="font-weight: 700; color: var(--secondary); font-size: 1rem;">🔍 Track Complaint:</span>
+        <input 
+          type="text" 
+          name="ticket_id" 
+          value="{{ ticket.ticket_id if ticket else search_id or '' }}" 
+          placeholder="Enter Ticket ID (e.g. LIET-2026-1001)..." 
+          class="form-control" 
+          style="flex: 1; min-width: 240px;"
+          required
+        >
+        <button type="submit" class="btn btn-primary">
+          Verify & Search
+        </button>
+      </form>
+    </div>
+  </div>
+
+  {% if ticket %}
+    <!-- Ticket Details & Status Banner -->
+    <div class="card">
+      <div class="card-header" style="background: #f8fafc; flex-wrap: wrap; gap: 10px;">
+        <div>
+          <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Ticket Reference</span>
+          <h2 style="font-size: 1.5rem; font-weight: 800; color: var(--primary);">#{{ ticket.ticket_id }}</h2>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+          <!-- Priority pill -->
+          {% if ticket.priority == 'Critical' %}
+            <span class="prio-pill prio-critical">🔴 Critical Priority</span>
+          {% elif ticket.priority == 'High' %}
+            <span class="prio-pill prio-high">🟠 High Priority</span>
+          {% elif ticket.priority == 'Medium' %}
+            <span class="prio-pill prio-medium">🔵 Medium Priority</span>
+          {% else %}
+            <span class="prio-pill prio-low">🟢 Low Priority</span>
+          {% endif %}
+
+          <!-- Status badge -->
+          {% if ticket.status == 'Submitted' %}
+            <span class="badge badge-submitted">Submitted</span>
+          {% elif ticket.status == 'Assigned' %}
+            <span class="badge badge-assigned">Assigned</span>
+          {% elif ticket.status == 'In Progress' %}
+            <span class="badge badge-in-progress">In Progress</span>
+          {% elif ticket.status == 'Resolved' %}
+            <span class="badge badge-resolved">Resolved</span>
+          {% elif ticket.status == 'Closed' %}
+            <span class="badge badge-closed">Closed</span>
+          {% endif %}
+
+          {% if ticket.is_escalated %}
+            <span class="badge badge-escalated">🚨 Auto-Escalated</span>
+          {% endif %}
+
+          <a href="{{ url_for('print_slip', ticket_id=ticket.ticket_id) }}" target="_blank" class="btn btn-sm btn-outline">
+            🖨️ Printable Slip
+          </a>
+        </div>
+      </div>
+
+      <div class="card-body">
+        
+        <!-- Interactive Milestone Stepper Flow -->
+        <div style="margin-bottom: 30px;">
+          <h4 style="font-size: 0.85rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 12px; letter-spacing: 0.05em;">
+            Lifecycle Status Timeline
+          </h4>
+
+          {% set s = ticket.status %}
+          <div class="stepper-container" style="padding-top: 10px;">
+            <ul class="stepper">
+              
+              <!-- 1. Submitted -->
+              <li class="step-item {% if s in ('Submitted', 'Assigned', 'In Progress', 'Resolved', 'Closed') %}completed{% endif %}">
+                <div class="step-circle">✓</div>
+                <div class="step-label">Submitted</div>
+              </li>
+
+              <!-- 2. Assigned -->
+              <li class="step-item {% if s in ('Assigned', 'In Progress', 'Resolved', 'Closed') %}completed{% elif s == 'Submitted' %}active{% endif %}">
+                <div class="step-circle">{% if s in ('Assigned', 'In Progress', 'Resolved', 'Closed') %}✓{% else %}2{% endif %}</div>
+                <div class="step-label">Assigned</div>
+              </li>
+
+              <!-- 3. In Progress -->
+              <li class="step-item {% if s in ('In Progress', 'Resolved', 'Closed') %}completed{% elif s == 'Assigned' %}active{% endif %}">
+                <div class="step-circle">{% if s in ('In Progress', 'Resolved', 'Closed') %}✓{% else %}3{% endif %}</div>
+                <div class="step-label">In Progress</div>
+              </li>
+
+              <!-- 4. Resolved -->
+              <li class="step-item {% if s in ('Resolved', 'Closed') %}completed{% elif s == 'In Progress' %}active{% endif %}">
+                <div class="step-circle">{% if s in ('Resolved', 'Closed') %}✓{% else %}4{% endif %}</div>
+                <div class="step-label">Resolved</div>
+              </li>
+
+              <!-- 5. Closed -->
+              <li class="step-item {% if s == 'Closed' %}completed{% elif s == 'Resolved' %}active{% endif %}">
+                <div class="step-circle">{% if s == 'Closed' %}✓{% else %}5{% endif %}</div>
+                <div class="step-label">Closed</div>
+              </li>
+
+            </ul>
+          </div>
+        </div>
+
+        <!-- Issue Summary Grid -->
+        <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 18px 20px; margin-bottom: 24px;">
+          <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--secondary); margin-bottom: 8px;">
+            {{ ticket.title }}
+          </h3>
+          <p style="color: #334155; font-size: 0.95rem; line-height: 1.6; margin-bottom: 16px;">
+            {{ ticket.description }}
+          </p>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; font-size: 0.86rem; border-top: 1px solid var(--border); padding-top: 14px;">
+            <div>
+              <span style="color: var(--text-muted); display: block;">Campus Location:</span>
+              <b style="color: var(--secondary);">📍 {{ ticket.building_block }}</b>
+              <div style="color: var(--text-subtle);">{{ ticket.room_location }}</div>
+            </div>
+
+            <div>
+              <span style="color: var(--text-muted); display: block;">Category & Dept:</span>
+              <b style="color: var(--secondary);">🏷️ {{ ticket.category }}</b>
+              <div style="color: var(--primary);">{{ ticket.dept_name or 'Auto-assigning...' }}</div>
+            </div>
+
+            <div>
+              <span style="color: var(--text-muted); display: block;">Assigned Staff:</span>
+              <b style="color: var(--secondary);">👷 {{ ticket.assigned_staff_name or 'Pending Dispatch' }}</b>
+              <div style="color: var(--text-subtle);">{{ ticket.dept_email or 'Helpdesk' }}</div>
+            </div>
+
+            <div>
+              <span style="color: var(--text-muted); display: block;">SLA Resolution Target:</span>
+              <b style="color: var(--danger);">⏰ {{ ticket.sla_deadline or 'Within 24 Hours' }}</b>
+              <div style="color: var(--text-subtle);">Raised: {{ ticket.created_at }}</div>
+            </div>
+          </div>
+
+          {% if ticket.is_escalated %}
+            <div style="background: #fff1f2; border: 1px solid #fecdd3; border-radius: 8px; padding: 10px 14px; margin-top: 14px; display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 1.3rem;">🚨</span>
+              <div style="font-size: 0.88rem; color: #9f1239;">
+                <b>Escalation Notice:</b> This complaint was auto-escalated to <b>{{ ticket.escalated_to }}</b> at {{ ticket.escalated_at }}.
+              </div>
+            </div>
+          {% endif %}
+        </div>
+
+        <!-- Resolution Remarks (if Resolved) -->
+        {% if ticket.resolution_remarks %}
+          <div style="background: #f0fdf4; border: 1px solid #86efac; border-radius: var(--radius-md); padding: 18px 20px; margin-bottom: 24px;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+              <span style="font-size: 1.2rem;">🛠️</span>
+              <h4 style="font-size: 1rem; font-weight: 700; color: #166534;">Official Technician Resolution Report</h4>
+            </div>
+            <p style="color: #14532d; font-size: 0.92rem; line-height: 1.6;">
+              {{ ticket.resolution_remarks }}
+            </p>
+          </div>
+        {% endif %}
+
+        <!-- Feedback & Satisfaction Rating (Synopsis Feature Page 5) -->
+        {% if ticket.status in ('Resolved', 'Closed') %}
+          <div class="card" style="border-color: #fde68a; background: #fffdf5; margin-bottom: 24px;">
+            <div class="card-header" style="background: transparent; border-color: #fef3c7;">
+              <h3 style="color: #92400e;">⭐ Resolution Feedback & Quality Rating</h3>
+              <span style="font-size: 0.8rem; color: #b45309;">Grievance Closure Audit</span>
+            </div>
+            <div class="card-body">
+              {% if ticket.feedback_rating %}
+                <div style="display: flex; align-items: center; gap: 14px;">
+                  <div style="font-size: 1.8rem; color: #f59e0b;">
+                    {% for i in range(ticket.feedback_rating) %}★{% endfor %}
+                    {% for i in range(5 - ticket.feedback_rating) %}☆{% endfor %}
+                  </div>
+                  <div>
+                    <b style="color: var(--secondary);">Rating: {{ ticket.feedback_rating }} / 5 Stars</b>
+                    <p style="color: #64748b; font-size: 0.9rem; margin-top: 2px;">"{{ ticket.feedback_comment }}"</p>
+                  </div>
+                </div>
+              {% else %}
+                <form action="{{ url_for('submit_feedback') }}" method="POST">
+                  <input type="hidden" name="ticket_id" value="{{ ticket.ticket_id }}">
+                  <p style="font-size: 0.9rem; color: #78350f; margin-bottom: 12px;">
+                    Please rate the resolution speed and work quality of this ticket:
+                  </p>
+
+                  <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 14px;">
+                    <div id="star-picker" class="star-rating">
+                      <span class="star" data-value="1">★</span>
+                      <span class="star" data-value="2">★</span>
+                      <span class="star" data-value="3">★</span>
+                      <span class="star" data-value="4">★</span>
+                      <span class="star filled" data-value="5">★</span>
+                    </div>
+                    <input type="hidden" id="rating-input" name="rating" value="5">
+                    <span id="rating-text" style="font-size: 0.88rem; font-weight: 700; color: #b45309;">5 Stars - Outstanding</span>
+                  </div>
+
+                  <div class="form-group" style="margin-bottom: 14px;">
+                    <input 
+                      type="text" 
+                      name="comment" 
+                      class="form-control" 
+                      placeholder="Optional feedback comments (e.g., Fast response, neatly cleaned, courteous staff)..." 
+                      style="background: white;"
+                    >
+                  </div>
+
+                  <button type="submit" class="btn btn-warning" style="font-weight: 700;">
+                    Submit Satisfaction Review
+                  </button>
+                </form>
+              {% endif %}
+            </div>
+          </div>
+        {% endif %}
+
+        <!-- Time-stamped Audit Trail Logs (Synopsis Feature Page 5) -->
+        <h4 style="font-size: 1.05rem; font-weight: 800; color: var(--secondary); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+          <span>📜 Comprehensive Audit Trail & History</span>
+        </h4>
+
+        <ul class="timeline">
+          {% for log in logs %}
+            <li class="timeline-item {% if log.action == 'Escalated' or log.action == 'Auto-Escalated' %}escalated{% endif %}">
+              <div class="timeline-dot"></div>
+              <div class="timeline-content">
+                <div class="timeline-header">
+                  <span class="timeline-title">{{ log.action }}</span>
+                  <span class="timeline-time">{{ log.created_at }}</span>
+                </div>
+                <div class="timeline-actor">
+                  👤 By: {{ log.performed_by }} ({{ log.role }})
+                </div>
+                {% if log.notes %}
+                  <div class="timeline-notes">
+                    {{ log.notes }}
+                  </div>
+                {% endif %}
+              </div>
+            </li>
+          {% endfor %}
+        </ul>
+
+      </div>
+    </div>
+  {% else %}
+    <!-- Help guide if no ticket is searched -->
+    <div class="card" style="text-align: center; padding: 40px 20px;">
+      <div style="font-size: 3rem; margin-bottom: 16px;">🎫</div>
+      <h3 style="font-size: 1.3rem; font-weight: 800; color: var(--secondary); margin-bottom: 8px;">
+        Track Any Campus Complaint Ticket
+      </h3>
+      <p style="max-width: 500px; margin: 0 auto 24px; color: var(--text-muted); font-size: 0.95rem;">
+        Enter your unique ticket ID above or click on one of the sample tickets below to inspect real-time audit trails and SLA progress:
+      </p>
+
+      <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 10px;">
+        <a href="{{ url_for('track_complaint', ticket_id='LIET-2026-1001') }}" class="chip-btn" style="background: white; color: #1e40af; border: 1px solid #bfdbfe; padding: 6px 14px;">
+          🔍 #LIET-2026-1001 (Wi-Fi in Lab 3 - In Progress)
+        </a>
+        <a href="{{ url_for('track_complaint', ticket_id='LIET-2026-1002') }}" class="chip-btn" style="background: white; color: #dc2626; border: 1px solid #fecaca; padding: 6px 14px;">
+          🔍 #LIET-2026-1002 (Fan Smoke - Critical Assigned)
+        </a>
+        <a href="{{ url_for('track_complaint', ticket_id='LIET-2026-1004') }}" class="chip-btn" style="background: white; color: #15803d; border: 1px solid #bbf7d0; padding: 6px 14px;">
+          🔍 #LIET-2026-1004 (Hostel Pipe - Resolved & Rated)
+        </a>
+      </div>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

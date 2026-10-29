@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+
+{% block title %}Lodge Complaint - Smart Campus Portal{% endblock %}
+
+{% block content %}
+<div style="max-width: 900px; margin: 0 auto;">
+
+  <!-- Page Header -->
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px;">
+    <div>
+      <h2 style="font-size: 1.75rem; font-weight: 800; color: var(--secondary);">Lodge Campus Grievance / Complaint</h2>
+      <p style="color: var(--text-muted); font-size: 0.92rem;">
+        Fill in the details below to generate a unique ticket and dispatch the maintenance department.
+      </p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+      <a href="{{ url_for('qr_scanner') }}" class="btn btn-outline" style="border-color: #3b82f6; color: #1e40af;">
+        📷 Scan Door QR Code
+      </a>
+      <a href="{{ url_for('simulation_view') }}" class="btn btn-outline">
+        🗺️ Pick on Map
+      </a>
+    </div>
+  </div>
+
+  <!-- Duplicate Alert Box (Dynamic via JavaScript) -->
+  <div id="duplicate-alert-box" class="duplicate-alert-box">
+    <div style="display: flex; align-items: flex-start; gap: 10px;">
+      <span style="font-size: 1.4rem;">⚠️</span>
+      <div style="flex: 1;">
+        <h4 style="font-size: 0.95rem; font-weight: 700; color: #92400e; margin-bottom: 4px;">
+          Possible Duplicate Complaints Found in this Facility
+        </h4>
+        <p style="font-size: 0.85rem; color: #78350f;">
+          Our Smart Duplicate Detection engine noticed existing active tickets matching your building and category. 
+          To avoid duplicate maintenance dispatches, you can <b>Upvote</b> the existing ticket instead of raising a new one!
+        </p>
+        <div id="duplicates-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Complaint Form Card -->
+  <div class="card">
+    <div class="card-header">
+      <h3>📝 Ticket Details & Location</h3>
+      <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">SLA Auto-Assigned</span>
+    </div>
+    <div class="card-body">
+      <form action="{{ url_for('submit_complaint') }}" method="POST" enctype="multipart/form-data">
+        
+        <!-- Complainant Identity -->
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="user_name">Your Full Name <span class="required">*</span></label>
+            <input 
+              type="text" 
+              id="user_name" 
+              name="user_name" 
+              class="form-control" 
+              value="{{ g.user.name if g.user else 'Bhaskar Raj' }}" 
+              required
+            >
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="user_email">College Email ID <span class="required">*</span></label>
+            <input 
+              type="email" 
+              id="user_email" 
+              name="user_email" 
+              class="form-control" 
+              value="{{ g.user.email if g.user else 'bhaskar@lloyd.ac.in' }}" 
+              required
+            >
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="user_roll">University Roll No. / Employee ID</label>
+            <input 
+              type="text" 
+              id="user_roll" 
+              name="user_roll" 
+              class="form-control" 
+              value="{{ g.user.roll_no if g.user else '2501530100041' }}"
+            >
+          </div>
+        </div>
+
+        <!-- Location Selection -->
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="building_block">Campus Building / Block <span class="required">*</span></label>
+            <select id="building_block" name="building_block" class="form-control" required>
+              <option value="" disabled {% if not prefill.building %}selected{% endif %}>-- Select Campus Block --</option>
+              <option value="Block A - Academic" {% if prefill.building == 'Block A - Academic' %}selected{% endif %}>Block A - Academic (Lecture Halls & Offices)</option>
+              <option value="Block B - CS Labs" {% if prefill.building == 'Block B - CS Labs' or not prefill.building %}selected{% endif %}>Block B - CS Labs (IT, Computing & AI Labs)</option>
+              <option value="Central Library" {% if prefill.building == 'Central Library' %}selected{% endif %}>Dr. A.P.J. Abdul Kalam Central Library</option>
+              <option value="Boys Hostel 1" {% if prefill.building == 'Boys Hostel 1' %}selected{% endif %}>Ramanujan Boys Hostel (Block 1)</option>
+              <option value="Girls Hostel" {% if prefill.building == 'Girls Hostel' %}selected{% endif %}>Kalpana Chawla Girls Hostel</option>
+              <option value="Student Cafeteria" {% if prefill.building == 'Student Cafeteria' %}selected{% endif %}>Student Food Court & Cafeteria</option>
+              <option value="Sports Arena" {% if prefill.building == 'Sports Arena' %}selected{% endif %}>Sports Arena & Pavilion</option>
+              <option value="Campus Substation" {% if prefill.building == 'Campus Substation' %}selected{% endif %}>Electrical Substation Yard</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="room_location">Exact Room / Specific Location <span class="required">*</span></label>
+            <input 
+              type="text" 
+              id="room_location" 
+              name="room_location" 
+              class="form-control" 
+              placeholder="e.g., Room 304 - High Performance Lab, 2nd Floor Washroom" 
+              value="{{ prefill.room if prefill.room else 'Room 304 - High Performance Lab' }}" 
+              required
+            >
+            <span class="form-hint">Tip: Scan door QR code for instant autofill</span>
+          </div>
+        </div>
+
+        <!-- Category & Priority -->
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="category">Complaint Category <span class="required">*</span></label>
+            <select id="category" name="category" class="form-control" required>
+              <option value="" disabled>-- Select Category --</option>
+              <option value="Internet & WiFi" {% if prefill.category == 'Internet & WiFi' or not prefill.category %}selected{% endif %}>Internet & WiFi (Router, Network, LAN, Proxy)</option>
+              <option value="Electricity & Lighting" {% if prefill.category == 'Electricity & Lighting' %}selected{% endif %}>Electricity & Lighting (Fan, AC, Lights, Wiring, Sockets)</option>
+              <option value="Water Supply" {% if prefill.category == 'Water Supply' %}selected{% endif %}>Water Supply & Plumbing (Tap, Leakage, Cooler, Basin)</option>
+              <option value="Cleanliness & Sanitation" {% if prefill.category == 'Cleanliness & Sanitation' %}selected{% endif %}>Cleanliness & Sanitation (Trash, Dustbins, Cleaning)</option>
+              <option value="Civil & Infrastructure" {% if prefill.category == 'Civil & Infrastructure' %}selected{% endif %}>Civil & Infrastructure (Benches, Doors, Windows, Paint)</option>
+              <option value="Library Facilities" {% if prefill.category == 'Library Facilities' %}selected{% endif %}>Library Facilities (Kiosk, Book Readers, Study Tables)</option>
+              <option value="Security & Safety" {% if prefill.category == 'Security & Safety' %}selected{% endif %}>Security & Campus Safety (CCTV, Fire Alarms, Emergency Lights)</option>
+              <option value="Hostel Administration" {% if prefill.category == 'Hostel Administration' %}selected{% endif %}>Hostel Administration (Mess Food, Laundry, Room Lockers)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="priority">Urgency / Priority Level <span class="required">*</span></label>
+            <select id="priority" name="priority" class="form-control" required>
+              <option value="Low" {% if prefill.priority == 'Low' %}selected{% endif %}>🟢 Low (SLA Target: 48 Hours)</option>
+              <option value="Medium" {% if prefill.priority == 'Medium' or not prefill.priority %}selected{% endif %}>🔵 Medium (SLA Target: 24 Hours - Standard)</option>
+              <option value="High" {% if prefill.priority == 'High' %}selected{% endif %}>🟠 High (SLA Target: 8 Hours)</option>
+              <option value="Critical" {% if prefill.priority == 'Critical' %}selected{% endif %}>🔴 Critical (SLA Target: 4 Hours - Emergency)</option>
+            </select>
+            <span class="form-hint">Auto-escalation triggers if target window expires</span>
+          </div>
+        </div>
+
+        <!-- Title & Description -->
+        <div class="form-group">
+          <label class="form-label" for="title">Complaint Subject / Title <span class="required">*</span></label>
+          <input 
+            type="text" 
+            id="title" 
+            name="title" 
+            class="form-control" 
+            placeholder="Briefly summarize the issue (e.g., Campus Wi-Fi disconnects continuously during lab class)" 
+            value="{{ prefill.title }}" 
+            required
+          >
+          <span class="form-hint">Real-time duplicate detection runs as you type</span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="description">Detailed Description & Symptoms <span class="required">*</span></label>
+          <textarea 
+            id="description" 
+            name="description" 
+            class="form-control" 
+            placeholder="Provide relevant details such as when it started, affected students, specific equipment or error messages..." 
+            required
+          ></textarea>
+        </div>
+
+        <!-- Evidence Attachment -->
+        <div class="form-group">
+          <label class="form-label" for="image">Attach Photo / Evidence (Optional)</label>
+          <input type="file" id="image" name="image" class="form-control" accept="image/*,.pdf">
+          <span class="form-hint">Accepted formats: JPG, PNG, WEBP, PDF (Max: 16 MB). Visual proof accelerates diagnosis!</span>
+        </div>
+
+        <!-- Submit Button -->
+        <div style="display: flex; justify-content: flex-end; gap: 14px; margin-top: 28px; padding-top: 18px; border-top: 1px solid var(--border);">
+          <a href="{{ url_for('index') }}" class="btn btn-outline">Cancel</a>
+          <button type="submit" class="btn btn-primary btn-lg" style="min-width: 200px;">
+            🚀 Register Complaint Ticket
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

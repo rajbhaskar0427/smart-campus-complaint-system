@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+
+{% block title %}Smart Campus Complaint Portal{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-banner">
+  <div class="hero-content">
+    <div class="hero-tag">
+      <span>✨ AKTU Mini Project 2026-27</span>
+    </div>
+    <h1 class="hero-title">Report, Track & Resolve Campus Issues in Real-Time</h1>
+    <p class="hero-subtitle">
+      A transparent, automated digital grievance and maintenance portal for students, faculty, and administration of Lloyd Institute of Engineering & Technology.
+    </p>
+
+    <!-- Quick Ticket Track Search Box -->
+    <div style="background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.25); border-radius: var(--radius-lg); padding: 8px 10px; display: flex; gap: 8px; max-width: 540px; margin-bottom: 24px;">
+      <form action="{{ url_for('track_index') }}" method="GET" style="display: flex; width: 100%; gap: 8px;">
+        <input 
+          type="text" 
+          name="ticket_id" 
+          placeholder="Enter Ticket ID (e.g., LIET-2026-1001)..." 
+          required 
+          style="flex: 1; border: none; background: white; padding: 10px 16px; border-radius: var(--radius-md); font-size: 0.95rem; outline: none; font-weight: 500;"
+        >
+        <button type="submit" class="btn btn-white" style="font-weight: 700;">
+          🔍 Track
+        </button>
+      </form>
+    </div>
+
+    <div class="hero-actions">
+      <a href="{{ url_for('submit_complaint') }}" class="btn btn-white btn-lg">
+        ➕ Submit New Complaint
+      </a>
+      <a href="{{ url_for('qr_scanner') }}" class="btn btn-outline-white btn-lg">
+        📷 Scan Room QR Code
+      </a>
+      <a href="{{ url_for('simulation_view') }}" class="btn btn-outline-white btn-lg" style="border-color: #38bdf8; color: #38bdf8;">
+        🌐 Campus Digital Twin
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- KPI Counters -->
+<div class="kpi-grid">
+  <div class="kpi-card">
+    <div class="kpi-icon blue">📁</div>
+    <div class="kpi-info">
+      <h4>Total Registered</h4>
+      <div class="kpi-value">{{ global_total_count }}</div>
+      <p>Across all departments</p>
+    </div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-icon yellow">⚙️</div>
+    <div class="kpi-info">
+      <h4>Active In-Progress</h4>
+      <div class="kpi-value">{{ global_active_count }}</div>
+      <p>Assigned to maintenance</p>
+    </div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-icon green">✅</div>
+    <div class="kpi-info">
+      <h4>Resolved & Closed</h4>
+      <div class="kpi-value">{{ global_resolved_count }}</div>
+      <p>Verified with student feedback</p>
+    </div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-icon red">🚨</div>
+    <div class="kpi-info">
+      <h4>Auto-Escalated</h4>
+      <div class="kpi-value">{{ global_escalated_count }}</div>
+      <p>Breached SLA threshold</p>
+    </div>
+  </div>
+</div>
+
+<!-- Complaint Handling Lifecycle (From Synopsis Page 3) -->
+<div class="card">
+  <div class="card-header">
+    <h3>🔄 Standard Complaint Handling Lifecycle Flow</h3>
+    <span style="font-size: 0.82rem; color: var(--text-muted);">As specified in Project Synopsis</span>
+  </div>
+  <div class="card-body">
+    <div class="stepper-container">
+      <ul class="stepper">
+        <li class="step-item completed">
+          <div class="step-circle">👤</div>
+          <div class="step-label">1. Student Login</div>
+        </li>
+        <li class="step-item completed">
+          <div class="step-circle">📝</div>
+          <div class="step-label">2. Submit Issue</div>
+        </li>
+        <li class="step-item completed">
+          <div class="step-circle">🎫</div>
+          <div class="step-label">3. Unique Ticket</div>
+        </li>
+        <li class="step-item active">
+          <div class="step-circle">🛠️</div>
+          <div class="step-label">4. Admin Assign</div>
+        </li>
+        <li class="step-item">
+          <div class="step-circle">⏱️</div>
+          <div class="step-label">5. Real-Time Track</div>
+        </li>
+        <li class="step-item">
+          <div class="step-circle">✅</div>
+          <div class="step-label">6. Tech Resolve</div>
+        </li>
+        <li class="step-item">
+          <div class="step-circle">⭐</div>
+          <div class="step-label">7. Close & Feedback</div>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- Grid: Campus Facility Status & Recent Resolved Tickets -->
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px;">
+  
+  <!-- Campus Facility Hotspots -->
+  <div class="card" style="margin-bottom: 0;">
+    <div class="card-header">
+      <h3>🏛️ Campus Facilities Overview</h3>
+      <a href="{{ url_for('simulation_view') }}" class="btn btn-sm btn-outline">Explore Map ↗</a>
+    </div>
+    <div class="card-body" style="padding: 16px 20px;">
+      <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 16px;">
+        Live status of Lloyd Institute blocks based on reported maintenance items:
+      </p>
+
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        {% set facilities = [
+          ('Block A - Academic', 'Lecture Theatres 101-404, Dean Office', '🏛️'),
+          ('Block B - CS Labs', 'CSE Labs 1-4, Server Room, AI Center', '💻'),
+          ('Central Library', 'Digital Reading Hall, Reference Archive', '📚'),
+          ('Boys Hostel 1', 'Ramanujan Hostel, Common Mess, Washrooms', '🛏️'),
+          ('Girls Hostel', 'Kalpana Chawla Hostel, Study Lounge', '🏡'),
+          ('Student Cafeteria', 'Food Court, Dining Hall, Juice Pavilion', '☕')
+        ] %}
+
+        {% for fac_name, fac_desc, fac_icon in facilities %}
+          {% set stat = building_stats.get(fac_name, {'count': 0, 'critical': 0}) %}
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: #f8fafc; border: 1px solid var(--border); border-radius: var(--radius-md);">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span style="font-size: 1.4rem;">{{ fac_icon }}</span>
+              <div>
+                <div style="font-weight: 700; font-size: 0.92rem; color: var(--secondary);">{{ fac_name }}</div>
+                <div style="font-size: 0.78rem; color: var(--text-muted);">{{ fac_desc }}</div>
+              </div>
+            </div>
+            <div>
+              {% if stat.count > 0 %}
+                {% if stat.critical > 0 %}
+                  <span class="badge badge-escalated">{{ stat.count }} issues (🚨 Critical)</span>
+                {% else %}
+                  <span class="badge badge-assigned">{{ stat.count }} issues active</span>
+                {% endif %}
+              {% else %}
+                <span class="badge badge-resolved">✓ All clear</span>
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Public Complaints Feed -->
+  <div class="card" style="margin-bottom: 0;">
+    <div class="card-header">
+      <h3>📢 Recent Transparency Feed</h3>
+      <a href="{{ url_for('track_index') }}" class="btn btn-sm btn-outline">Search All</a>
+    </div>
+    <div class="card-body" style="padding: 16px 20px;">
+      <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 16px;">
+        Latest submissions and real-time resolution progress:
+      </p>
+
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        {% for c in recent_complaints %}
+          <div style="background: white; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px 14px; transition: transform 0.2s;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+              <div>
+                <a href="{{ url_for('track_complaint', ticket_id=c.ticket_id) }}" class="ticket-code">
+                  #{{ c.ticket_id }}
+                </a>
+                <span style="font-weight: 700; color: var(--secondary); margin-left: 6px;">{{ c.title }}</span>
+              </div>
+              <div>
+                {% if c.status == 'Submitted' %}
+                  <span class="badge badge-submitted">Submitted</span>
+                {% elif c.status == 'Assigned' %}
+                  <span class="badge badge-assigned">Assigned</span>
+                {% elif c.status == 'In Progress' %}
+                  <span class="badge badge-in-progress">In Progress</span>
+                {% elif c.status == 'Resolved' %}
+                  <span class="badge badge-resolved">Resolved</span>
+                {% elif c.status == 'Closed' %}
+                  <span class="badge badge-closed">Closed</span>
+                {% endif %}
+              </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: var(--text-muted);">
+              <span>📍 {{ c.building_block }} &bull; {{ c.room_location }}</span>
+              <span>🕒 {{ c.created_at[:16] }}</span>
+            </div>
+
+            {% if c.resolution_remarks %}
+              <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 6px 10px; margin-top: 8px; font-size: 0.82rem; color: #166534;">
+                <b>Technician Resolution:</b> {{ c.resolution_remarks }}
+                {% if c.rating %}
+                  <span style="color: #f59e0b; margin-left: 8px;">★ {{ c.rating }}/5 Stars</span>
+                {% endif %}
+              </div>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

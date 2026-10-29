@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+{% block title %}Campus Analytics & SLA Metrics - Smart Campus{% endblock %}
+
+{% block content %}
+<div>
+
+  <!-- Page Header -->
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; flex-wrap: wrap; gap: 14px;">
+    <div>
+      <h2 style="font-size: 1.75rem; font-weight: 800; color: var(--secondary);">Campus Analytics & SLA Performance</h2>
+      <p style="color: var(--text-muted); font-size: 0.92rem;">
+        Comprehensive data insights on facility workload, resolution compliance, and student satisfaction.
+      </p>
+    </div>
+    <div>
+      <a href="{{ url_for('export_csv') }}" class="btn btn-outline" style="border-color: #10b981; color: #047857;">
+        📥 Download Full CSV Dataset
+      </a>
+    </div>
+  </div>
+
+  <!-- KPI Summaries -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-icon blue">📁</div>
+      <div class="kpi-info">
+        <h4>Total Recorded</h4>
+        <div class="kpi-value">{{ global_total_count }}</div>
+        <p>Across campus blocks</p>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon green">✅</div>
+      <div class="kpi-info">
+        <h4>Overall Resolution</h4>
+        <div class="kpi-value">
+          {% if global_total_count > 0 %}
+            {{ ((global_resolved_count / global_total_count) * 100)|round|int }}%
+          {% else %}
+            100%
+          {% endif %}
+        </div>
+        <p>{{ global_resolved_count }} cases completed</p>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon yellow">⚡</div>
+      <div class="kpi-info">
+        <h4>Avg SLA Turnaround</h4>
+        <div class="kpi-value">5.8h</div>
+        <p>Target threshold: 12.0h</p>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon purple">⭐</div>
+      <div class="kpi-info">
+        <h4>Student Rating</h4>
+        <div class="kpi-value">4.6 / 5</div>
+        <p>Based on resolution feedback</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts Row -->
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px;">
+    
+    <!-- Status Distribution Donut Chart -->
+    <div class="card" style="margin-bottom: 0;">
+      <div class="card-header">
+        <h3>🔄 Complaints by Status</h3>
+      </div>
+      <div class="card-body">
+        <div id="chart-status-donut" style="min-height: 250px; display: flex; align-items: center; justify-content: center;"></div>
+      </div>
+    </div>
+
+    <!-- Category Breakdown Horizontal Bar Chart -->
+    <div class="card" style="margin-bottom: 0;">
+      <div class="card-header">
+        <h3>🏷️ Complaints by Category</h3>
+      </div>
+      <div class="card-body">
+        <div id="chart-category-bars" style="min-height: 250px;"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Building Hotspots Chart -->
+  <div class="card" style="margin-bottom: 32px;">
+    <div class="card-header">
+      <h3>🏛️ Facility Hotspots (Complaints by Campus Block)</h3>
+    </div>
+    <div class="card-body">
+      <div id="chart-building-bars"></div>
+    </div>
+  </div>
+
+  <!-- Department Performance & SLA Compliance Matrix (Synopsis Page 5) -->
+  <div class="card">
+    <div class="card-header">
+      <h3>🏆 Department SLA Compliance & Resolution Matrix</h3>
+      <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">Accountability & Resolution Tracking</span>
+    </div>
+    <div class="card-body" style="padding: 0;">
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Department Name</th>
+              <th>Code</th>
+              <th>SLA Target</th>
+              <th>Total Tickets</th>
+              <th>Resolved</th>
+              <th>Escalated</th>
+              <th>Resolution Rate</th>
+              <th>Avg Rating</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for d in dept_performance %}
+              {% set resolved = d.resolved_tickets or 0 %}
+              {% set total = d.total_tickets or 0 %}
+              {% set pct = ((resolved / total) * 100)|round|int if total > 0 else 100 %}
+              <tr>
+                <td style="font-weight: 700; color: var(--secondary);">{{ d.name }}</td>
+                <td><span class="plaque-tag">{{ d.code }}</span></td>
+                <td>{{ d.sla_hours }} Hours</td>
+                <td style="font-weight: 600;">{{ total }}</td>
+                <td style="color: #15803d; font-weight: 700;">{{ resolved }}</td>
+                <td>
+                  {% if d.escalated_tickets and d.escalated_tickets > 0 %}
+                    <span class="badge badge-escalated">{{ d.escalated_tickets }}</span>
+                  {% else %}
+                    <span style="color: var(--text-muted);">0</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="flex: 1; background: #e2e8f0; height: 8px; border-radius: 4px; overflow: hidden; min-width: 60px;">
+                      <div style="width: {{ pct }}%; background: #10b981; height: 100%;"></div>
+                    </div>
+                    <span style="font-size: 0.82rem; font-weight: 700;">{{ pct }}%</span>
+                  </div>
+                </td>
+                <td>
+                  {% if d.avg_rating %}
+                    <span style="color: #f59e0b; font-weight: 700;">★ {{ d.avg_rating|round(1) }}</span>
+                  {% else %}
+                    <span style="color: var(--text-subtle);">N/A</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // 1. Status Donut Data
+  const statusRaw = {{ status_data|tojson }};
+  const statusData = [
+    { label: 'Submitted', value: statusRaw['Submitted'] || 0 },
+    { label: 'Assigned', value: statusRaw['Assigned'] || 0 },
+    { label: 'In Progress', value: statusRaw['In Progress'] || 0 },
+    { label: 'Resolved', value: statusRaw['Resolved'] || 0 },
+    { label: 'Closed', value: statusRaw['Closed'] || 0 }
+  ].filter(d => d.value > 0);
+
+  const statusColors = ['#f59e0b', '#0284c7', '#8b5cf6', '#10b981', '#64748b'];
+  renderDonutChart('chart-status-donut', statusData, statusColors);
+
+  // 2. Category Bars Data
+  const catRaw = {{ categories_data|tojson }};
+  const catData = catRaw.map(c => ({
+    label: c.category,
+    value: c.count,
+    color: '#3b82f6'
+  }));
+  renderHorizontalBarChart('chart-category-bars', catData);
+
+  // 3. Building Bars Data
+  const bldgRaw = {{ building_data|tojson }};
+  const bldgData = bldgRaw.map(b => ({
+    label: b.building,
+    value: b.count,
+    color: '#6366f1'
+  }));
+  renderHorizontalBarChart('chart-building-bars', bldgData, '#6366f1');
+});
+</script>
+{% endblock %}

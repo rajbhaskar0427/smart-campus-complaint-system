@@ -1,0 +1,324 @@
+{% extends "base.html" %}
+
+{% block title %}Administrator Console - Lloyd Smart Campus{% endblock %}
+
+{% block content %}
+<div>
+
+  <!-- Admin Header Bar -->
+  <div style="background: white; border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 24px 28px; margin-bottom: 28px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 20px; box-shadow: var(--shadow-sm);">
+    <div style="display: flex; align-items: center; gap: 16px;">
+      <div style="width: 58px; height: 58px; border-radius: var(--radius-md); background: linear-gradient(135deg, #b91c1c, #ef4444); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; font-weight: 800;">
+        👑
+      </div>
+      <div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <h2 style="font-size: 1.45rem; font-weight: 800; color: var(--secondary);">Administrator Console</h2>
+          <span class="badge" style="background: #fee2e2; color: #b91c1c;">Chief Proctor / Supervisor</span>
+        </div>
+        <div style="color: var(--text-muted); font-size: 0.88rem; margin-top: 2px;">
+          Signed in as: <b>Prof. Vishal Gupta</b> &bull; Department of Computer Science & Engineering
+        </div>
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+      <a href="{{ url_for('export_csv') }}" class="btn btn-outline" style="border-color: #10b981; color: #047857;">
+        📥 Export CSV Report
+      </a>
+      <a href="{{ url_for('simulation_view') }}" class="btn btn-primary" style="background: #4f46e5;">
+        🌐 Campus Digital Twin
+      </a>
+    </div>
+  </div>
+
+  <!-- Admin KPI Counters -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-icon blue">📁</div>
+      <div class="kpi-info">
+        <h4>Total Tickets</h4>
+        <div class="kpi-value">{{ kpis.total or 0 }}</div>
+        <p>Campus lifetime load</p>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon yellow">⏳</div>
+      <div class="kpi-info">
+        <h4>Unassigned</h4>
+        <div class="kpi-value">{{ kpis.pending_assignment or 0 }}</div>
+        <p>Awaiting technician</p>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon purple">🔧</div>
+      <div class="kpi-info">
+        <h4>In Progress</h4>
+        <div class="kpi-value">{{ kpis.in_progress or 0 }}</div>
+        <p>Field maintenance ongoing</p>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon green">✅</div>
+      <div class="kpi-info">
+        <h4>Resolved</h4>
+        <div class="kpi-value">{{ kpis.resolved or 0 }}</div>
+        <p>Ready for closure audit</p>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon red">🚨</div>
+      <div class="kpi-info">
+        <h4>SLA Breaches</h4>
+        <div class="kpi-value">{{ kpis.escalated or 0 }}</div>
+        <p>Escalated to Proctor</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter & Search Controls -->
+  <div class="card" style="margin-bottom: 24px;">
+    <div class="card-body" style="padding: 16px 20px;">
+      <form action="{{ url_for('admin_dashboard') }}" method="GET" style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center;">
+        
+        <div style="flex: 1; min-width: 220px;">
+          <input 
+            type="text" 
+            name="q" 
+            value="{{ filters.q or '' }}" 
+            placeholder="Search ticket #, title, student, or building..." 
+            class="form-control" 
+            style="padding: 8px 12px; font-size: 0.9rem;"
+          >
+        </div>
+
+        <select name="status" class="form-control" style="width: auto; min-width: 140px; padding: 8px 12px; font-size: 0.9rem;">
+          <option value="">All Statuses</option>
+          <option value="Submitted" {% if filters.status == 'Submitted' %}selected{% endif %}>Submitted</option>
+          <option value="Assigned" {% if filters.status == 'Assigned' %}selected{% endif %}>Assigned</option>
+          <option value="In Progress" {% if filters.status == 'In Progress' %}selected{% endif %}>In Progress</option>
+          <option value="Resolved" {% if filters.status == 'Resolved' %}selected{% endif %}>Resolved</option>
+          <option value="Closed" {% if filters.status == 'Closed' %}selected{% endif %}>Closed</option>
+        </select>
+
+        <select name="priority" class="form-control" style="width: auto; min-width: 130px; padding: 8px 12px; font-size: 0.9rem;">
+          <option value="">All Priorities</option>
+          <option value="Critical" {% if filters.priority == 'Critical' %}selected{% endif %}>Critical</option>
+          <option value="High" {% if filters.priority == 'High' %}selected{% endif %}>High</option>
+          <option value="Medium" {% if filters.priority == 'Medium' %}selected{% endif %}>Medium</option>
+          <option value="Low" {% if filters.priority == 'Low' %}selected{% endif %}>Low</option>
+        </select>
+
+        <button type="submit" class="btn btn-primary" style="padding: 8px 18px;">
+          Filter Results
+        </button>
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline" style="padding: 8px 14px;">
+          Reset
+        </a>
+      </form>
+    </div>
+  </div>
+
+  <!-- Complaints Management Table -->
+  <div class="card">
+    <div class="card-header">
+      <h3>📋 Campus Complaints Master Queue</h3>
+      <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">{{ complaints|length }} Tickets Listed</span>
+    </div>
+    <div class="card-body" style="padding: 0;">
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Ticket ID</th>
+              <th>Student / User</th>
+              <th>Category & Description</th>
+              <th>Facility Location</th>
+              <th>Priority</th>
+              <th>SLA Target</th>
+              <th>Status</th>
+              <th>Assigned Department & Tech</th>
+              <th>Manage</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for c in complaints %}
+              <tr>
+                <td>
+                  <a href="{{ url_for('track_complaint', ticket_id=c.ticket_id) }}" class="ticket-code">
+                    #{{ c.ticket_id }}
+                  </a>
+                </td>
+                <td>
+                  <div style="font-weight: 700; color: var(--secondary);">{{ c.user_name }}</div>
+                  <div style="font-size: 0.78rem; color: var(--text-muted);">{{ c.user_roll or c.user_email }}</div>
+                </td>
+                <td style="max-width: 260px;">
+                  <div style="font-weight: 700; color: var(--secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ c.title }}</div>
+                  <div style="font-size: 0.78rem; color: var(--text-muted);">🏷️ {{ c.category }}</div>
+                </td>
+                <td>
+                  <div style="font-weight: 600;">{{ c.building_block }}</div>
+                  <div style="font-size: 0.78rem; color: var(--text-subtle);">{{ c.room_location }}</div>
+                </td>
+                <td>
+                  {% if c.priority == 'Critical' %}
+                    <span class="prio-pill prio-critical">Critical</span>
+                  {% elif c.priority == 'High' %}
+                    <span class="prio-pill prio-high">High</span>
+                  {% elif c.priority == 'Medium' %}
+                    <span class="prio-pill prio-medium">Medium</span>
+                  {% else %}
+                    <span class="prio-pill prio-low">Low</span>
+                  {% endif %}
+                </td>
+                <td style="font-size: 0.8rem; white-space: nowrap;">
+                  <span style="color: var(--danger); font-weight: 600;">{{ c.sla_deadline[11:16] if c.sla_deadline else '24h' }}</span>
+                  <div style="color: var(--text-subtle); font-size: 0.72rem;">{{ c.sla_deadline[:10] if c.sla_deadline else '' }}</div>
+                </td>
+                <td>
+                  {% if c.status == 'Submitted' %}
+                    <span class="badge badge-submitted">Submitted</span>
+                  {% elif c.status == 'Assigned' %}
+                    <span class="badge badge-assigned">Assigned</span>
+                  {% elif c.status == 'In Progress' %}
+                    <span class="badge badge-in-progress">In Progress</span>
+                  {% elif c.status == 'Resolved' %}
+                    <span class="badge badge-resolved">Resolved</span>
+                  {% elif c.status == 'Closed' %}
+                    <span class="badge badge-closed">Closed</span>
+                  {% endif %}
+
+                  {% if c.is_escalated %}
+                    <div style="margin-top: 4px;"><span class="badge badge-escalated">🚨 Escalated</span></div>
+                  {% endif %}
+                </td>
+                <td>
+                  <div style="font-weight: 600; font-size: 0.85rem; color: var(--primary);">
+                    {{ c.dept_name or 'Unassigned' }}
+                  </div>
+                  <div style="font-size: 0.78rem; color: var(--text-muted);">
+                    {{ c.assigned_staff_name or 'No tech dispatched' }}
+                  </div>
+                </td>
+                <td>
+                  <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                    
+                    <!-- Assign Modal Button -->
+                    <button 
+                      type="button" 
+                      class="btn btn-sm btn-outline" 
+                      onclick="openAssignModal('{{ c.ticket_id }}', '{{ c.assigned_dept_id }}', '{{ c.assigned_staff_name }}', '{{ c.priority }}')"
+                    >
+                      Assign ⚙️
+                    </button>
+
+                    <!-- Escalate Button -->
+                    {% if not c.is_escalated and c.status != 'Closed' %}
+                      <form action="{{ url_for('admin_escalate', ticket_id=c.ticket_id) }}" method="POST" style="display:inline;">
+                        <input type="hidden" name="notes" value="Manual Escalation from Admin Console">
+                        <button type="submit" class="btn btn-sm btn-danger" title="Escalate to Dean/HOD" onclick="return confirm('Escalate ticket {{ c.ticket_id }} to Dean / Chief Proctor?')">
+                          🚨
+                        </button>
+                      </form>
+                    {% endif %}
+
+                    <!-- Close Button -->
+                    {% if c.status == 'Resolved' %}
+                      <form action="{{ url_for('admin_close', ticket_id=c.ticket_id) }}" method="POST" style="display:inline;">
+                        <button type="submit" class="btn btn-sm btn-success" title="Verify & Close Ticket">
+                          Close ✓
+                        </button>
+                      </form>
+                    {% endif %}
+
+                  </div>
+                </td>
+              </tr>
+            {% else %}
+              <tr>
+                <td colspan="9" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                  No complaints match the selected filter criteria.
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal: Assign Department & Technician -->
+<div id="assign-modal" class="modal-overlay">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--secondary);">Assign Ticket to Maintenance Department</h3>
+      <button class="modal-close" style="background: none; border: none; font-size: 1.3rem; cursor: pointer;">✕</button>
+    </div>
+    <form action="{{ url_for('admin_assign') }}" method="POST">
+      <div class="modal-body">
+        <input type="hidden" id="modal-ticket-id" name="ticket_id">
+
+        <div class="form-group">
+          <label class="form-label">Ticket Reference</label>
+          <div id="modal-ticket-display" style="font-size: 1.1rem; font-weight: 800; color: var(--primary); font-family: monospace;"></div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="modal-dept">Maintenance Department <span class="required">*</span></label>
+          <select id="modal-dept" name="department_id" class="form-control" required>
+            {% for d in departments %}
+              <option value="{{ d.id }}">{{ d.name }} (SLA: {{ d.sla_hours }}h)</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="modal-staff">Dispatched Technician / Worker <span class="required">*</span></label>
+          <select id="modal-staff" name="staff_name" class="form-control" required>
+            {% for s in staff_members %}
+              <option value="{{ s.name }}">{{ s.name }} ({{ s.department }})</option>
+            {% endfor %}
+            <option value="Emergency Response Crew">Emergency Response Crew</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="modal-priority">Adjust Priority</label>
+          <select id="modal-priority" name="priority" class="form-control">
+            <option value="Low">Low (48h)</option>
+            <option value="Medium">Medium (24h)</option>
+            <option value="High">High (8h)</option>
+            <option value="Critical">Critical (4h)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="modal-notes">Admin Instructions / Work Order Notes</label>
+          <textarea id="modal-notes" name="notes" class="form-control" placeholder="Specific instructions for technician..." style="min-height: 80px;"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline modal-close">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save & Dispatch Worker</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function openAssignModal(ticketId, deptId, staffName, priority) {
+  document.getElementById('modal-ticket-id').value = ticketId;
+  document.getElementById('modal-ticket-display').innerText = '#' + ticketId;
+  if (deptId) document.getElementById('modal-dept').value = deptId;
+  if (priority) document.getElementById('modal-priority').value = priority;
+  openModal('assign-modal');
+}
+</script>
+{% endblock %}

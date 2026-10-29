@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+
+{% block title %}Student Portal - My Complaints{% endblock %}
+
+{% block content %}
+<div>
+  <!-- User Profile Banner -->
+  <div style="background: white; border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 24px 28px; margin-bottom: 28px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 20px; box-shadow: var(--shadow-sm);">
+    <div style="display: flex; align-items: center; gap: 18px;">
+      <div style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #1e40af, #3b82f6); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; font-weight: 800;">
+        {{ g.user.name[0] if g.user else 'B' }}
+      </div>
+      <div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <h2 style="font-size: 1.4rem; font-weight: 800; color: var(--secondary);">{{ g.user.name if g.user else 'Bhaskar Raj' }}</h2>
+          <span class="badge badge-assigned">{{ g.user.role|capitalize if g.user else 'Student' }}</span>
+        </div>
+        <div style="color: var(--text-muted); font-size: 0.88rem; margin-top: 2px;">
+          Roll No: <b>{{ g.user.roll_no if g.user else '2501530100041' }}</b> &bull; Department: <b>{{ g.user.department if g.user else 'CSE (Section 2A)' }}</b>
+        </div>
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 12px;">
+      <a href="{{ url_for('submit_complaint') }}" class="btn btn-primary">
+        ➕ Submit New Complaint
+      </a>
+      <a href="{{ url_for('qr_scanner') }}" class="btn btn-outline">
+        📷 Scan Room QR
+      </a>
+    </div>
+  </div>
+
+  <!-- KPI Cards for Student -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-icon blue">📁</div>
+      <div class="kpi-info">
+        <h4>My Submissions</h4>
+        <div class="kpi-value">{{ stats.total or 0 }}</div>
+        <p>Total logged by you</p>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon yellow">⏳</div>
+      <div class="kpi-info">
+        <h4>Active In-Progress</h4>
+        <div class="kpi-value">{{ stats.active or 0 }}</div>
+        <p>Under maintenance</p>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon green">✅</div>
+      <div class="kpi-info">
+        <h4>Resolved</h4>
+        <div class="kpi-value">{{ stats.resolved or 0 }}</div>
+        <p>Issues completed</p>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon red">🚨</div>
+      <div class="kpi-info">
+        <h4>Escalations</h4>
+        <div class="kpi-value">{{ stats.escalated or 0 }}</div>
+        <p>Escalated to HOD/Dean</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Complaints Table Card -->
+  <div class="card">
+    <div class="card-header">
+      <h3>📋 My Complaints History</h3>
+      <div>
+        <input 
+          type="text" 
+          id="client-table-search" 
+          placeholder="Filter your tickets..." 
+          class="form-control" 
+          style="padding: 6px 14px; font-size: 0.85rem; width: 220px;"
+        >
+      </div>
+    </div>
+    <div class="card-body" style="padding: 0;">
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Ticket ID</th>
+              <th>Category & Title</th>
+              <th>Facility Location</th>
+              <th>Priority</th>
+              <th>Status</th>
+              <th>Assigned Tech</th>
+              <th>Created On</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for c in complaints %}
+              <tr>
+                <td>
+                  <a href="{{ url_for('track_complaint', ticket_id=c.ticket_id) }}" class="ticket-code">
+                    #{{ c.ticket_id }}
+                  </a>
+                </td>
+                <td>
+                  <div style="font-weight: 700; color: var(--secondary);">{{ c.title }}</div>
+                  <div style="font-size: 0.78rem; color: var(--text-muted);">🏷️ {{ c.category }}</div>
+                </td>
+                <td>
+                  <div style="font-weight: 600;">{{ c.building_block }}</div>
+                  <div style="font-size: 0.78rem; color: var(--text-subtle);">{{ c.room_location }}</div>
+                </td>
+                <td>
+                  {% if c.priority == 'Critical' %}
+                    <span class="prio-pill prio-critical">Critical</span>
+                  {% elif c.priority == 'High' %}
+                    <span class="prio-pill prio-high">High</span>
+                  {% elif c.priority == 'Medium' %}
+                    <span class="prio-pill prio-medium">Medium</span>
+                  {% else %}
+                    <span class="prio-pill prio-low">Low</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if c.status == 'Submitted' %}
+                    <span class="badge badge-submitted">Submitted</span>
+                  {% elif c.status == 'Assigned' %}
+                    <span class="badge badge-assigned">Assigned</span>
+                  {% elif c.status == 'In Progress' %}
+                    <span class="badge badge-in-progress">In Progress</span>
+                  {% elif c.status == 'Resolved' %}
+                    <span class="badge badge-resolved">Resolved</span>
+                  {% elif c.status == 'Closed' %}
+                    <span class="badge badge-closed">Closed</span>
+                  {% endif %}
+
+                  {% if c.is_escalated %}
+                    <div style="margin-top: 4px;"><span class="badge badge-escalated">Escalated</span></div>
+                  {% endif %}
+                </td>
+                <td>
+                  <span style="font-size: 0.85rem; font-weight: 500;">
+                    {{ c.assigned_staff_name or 'Unassigned' }}
+                  </span>
+                </td>
+                <td style="font-size: 0.82rem; color: var(--text-muted); white-space: nowrap;">
+                  {{ c.created_at[:16] }}
+                </td>
+                <td>
+                  <div style="display: flex; gap: 6px;">
+                    <a href="{{ url_for('track_complaint', ticket_id=c.ticket_id) }}" class="btn btn-sm btn-outline">
+                      Track
+                    </a>
+                    {% if c.status in ('Resolved', 'Closed') and not c.feedback_rating %}
+                      <a href="{{ url_for('track_complaint', ticket_id=c.ticket_id) }}" class="btn btn-sm btn-warning">
+                        Rate ⭐
+                      </a>
+                    {% endif %}
+                  </div>
+                </td>
+              </tr>
+            {% else %}
+              <tr>
+                <td colspan="8" style="text-align: center; padding: 36px; color: var(--text-muted);">
+                  You haven't logged any complaints yet. 
+                  <a href="{{ url_for('submit_complaint') }}" style="color: var(--primary); font-weight: 700;">Submit your first grievance</a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
